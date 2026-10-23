@@ -233,6 +233,18 @@ td.n{font-variant-numeric:tabular-nums}
 .plrow{display:flex;flex-wrap:wrap;align-items:center;gap:10px;border-bottom:1px solid var(--line);padding-block:6px}
 .cava2{width:40px;height:40px}
 .panel.alert{border-color:var(--bad);background:var(--bad-bg)}
+.sendgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.sendgrid{grid-template-columns:1fr}}
+.sendbox{border:2px solid var(--line);border-radius:14px;padding:12px 14px;min-width:0;display:grid;gap:8px;align-content:start}
+.sendbox h4{margin:0;font-family:var(--display);font-size:1.1rem;display:flex;gap:6px;align-items:center}
+.check{display:flex;gap:8px;align-items:flex-start;font-size:.95rem}
+.check input{margin-top:4px;width:18px;height:18px;flex:none}
+.wa{display:inline-flex;gap:8px;align-items:center;justify-content:center;background:#1FA855;color:#fff;text-decoration:none;font-weight:800;border-radius:14px;padding:10px 16px;box-shadow:0 4px 0 #157A3D;justify-self:start}
+.wa:active{transform:translateY(2px);box-shadow:0 2px 0 #157A3D}
+.steps summary{cursor:pointer;font-weight:800;color:var(--t4)}
+.steps ol{padding-left:20px;display:grid;gap:6px;margin:10px 0}
+.steps code{background:var(--soft);border-radius:6px;padding:0 4px}
+.code{width:100%;height:180px;margin-top:8px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.75rem;background:var(--bg);color:var(--ink);border:2px solid var(--line);border-radius:10px;padding:8px;white-space:pre;overflow:auto}
 .toast{width:max-content;max-width:90vw;text-align:center;position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:12px;font-weight:800;z-index:40}
 </style>
 
@@ -391,6 +403,7 @@ const UI={
   check:()=>`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5 L10 17.5 L19 7" style="fill:none;stroke:#fff;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round"/></svg>`,
   x:()=>`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6 L18 18 M18 6 L6 18" style="fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round"/></svg>`,
   family:()=>`<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="7" r="3" style="fill:var(--ink)"/><circle cx="16.5" cy="9" r="2.5" style="fill:var(--ink)"/><path d="M2 20c0-4 3-7 6-7s6 3 6 7zM12.5 20c0-3 2-5.5 4-5.5s4.5 2.5 4.5 5.5z" style="fill:var(--ink)"/></svg>`,
+  chat:()=>`<svg viewBox="0 0 24 24" aria-hidden="true" style="width:22px;height:22px"><path d="M4 20l1.3-3.9A8 8 0 1 1 8 19z" style="fill:none;stroke:currentColor;stroke-width:2.2;stroke-linejoin:round"/><path d="M9 10.5h6M9 13.5h4" style="stroke:currentColor;stroke-width:2;stroke-linecap:round"/></svg>`,
   out:()=>`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H5v16h5M15 8l4 4-4 4M19 12H9" style="fill:none;stroke:var(--ink);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"/></svg>`,
   sound:on=>`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" style="fill:var(--ink)"/>${on?'<path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" style="fill:none;stroke:var(--ink);stroke-width:2;stroke-linecap:round"/>':'<path d="M16 9l5 6M21 9l-5 6" style="fill:none;stroke:var(--ink);stroke-width:2;stroke-linecap:round"/>'}</svg>`
 };
@@ -456,6 +469,29 @@ UNITS.forEach((u,i)=>{u.id='u'+(i+1);u.n=i+1;u.c=COLS[i%5];u.d=DCOLS[i%5]});
 const DAILY_GOAL=20;
 const PRAISE=[["Iporãite!","¡Muy bien!"],["Upéicha!","¡Así es!"],["Nde katupyry!","¡Sos muy hábil!"],["Iporã!","¡Bien!"]];
 
+const GAS_CODE=`// Jaguarete'i: recibe los resultados de la app y los anota en esta planilla.
+function doPost(e) {
+  var d = JSON.parse(e.postData.contents);
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var fecha = new Date(d.ts || Date.now());
+  if (d.type === 'leccion') {
+    var sh = hoja(ss, 'Lecciones', ['Fecha', 'Jugador', 'Nivel', 'Correctas', 'Total', '% aciertos', 'XP', 'Tiempo (seg)', 'Palabras para repasar']);
+    sh.appendRow([fecha, d.player, d.unitName, d.correct, d.total, Math.round(d.correct / d.total * 100), d.xp, d.seconds, (d.mistakes || []).join(', ')]);
+  } else if (d.type === 'ingreso') {
+    var si = hoja(ss, 'Ingresos', ['Fecha', 'Perfil', 'Resultado']);
+    si.appendRow([fecha, d.player, d.ok ? 'Entró' : 'Dibujos equivocados']);
+  } else {
+    var sp = hoja(ss, 'Pruebas', ['Fecha', 'Mensaje']);
+    sp.appendRow([fecha, 'Conexión correcta: ' + (d.player || '')]);
+  }
+  return ContentService.createTextOutput('ok');
+}
+function hoja(ss, nombre, titulos) {
+  var sh = ss.getSheetByName(nombre) || ss.insertSheet(nombre);
+  if (sh.getLastRow() === 0) { sh.appendRow(titulos); sh.setFrozenRows(1); sh.getRange(1, 1, 1, titulos.length).setFontWeight('bold'); }
+  return sh;
+}`;
+
 /* ---------- Estado y guardado ---------- */
 const LS={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 let sessions=LS.get('gn-sessions',[]);
@@ -511,12 +547,39 @@ let loginWrite=Promise.resolve();
 function logLogin(pid,ok){
   const e={ts:Date.now(),p:pid,ok};
   logins=logins.concat([e]);
+  sendToSheet({type:'ingreso',ts:e.ts,player:pName(pid),ok});
   if(db){
     const day='d'+today();
     const entries=logins.filter(x=>dayKey(x.ts)===today()).slice(-200);
     loginWrite=loginWrite.then(()=>db.collection('logins').doc(day).set({entries})).catch(()=>{});
   } else LS.set('gn-logins',logins.slice(-300));
 }
+/* ---------- Enviar resultados a la familia ---------- */
+const sheetOn=()=>storeMode==='device'&&/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec/.test(settings.sheetUrl||'');
+let flushing=false;
+async function flushOutbox(){
+  if(!sheetOn()||flushing) return;
+  flushing=true;
+  try{
+    for(let guard=0;guard<500;guard++){
+      const box=LS.get('gn-outbox',[]);if(!box.length) break;
+      const item=box[0];
+      try{await fetch(settings.sheetUrl,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(item)})}
+      catch(e){break}
+      LS.set('gn-outbox',LS.get('gn-outbox',[]).filter(x=>x.qid!==item.qid));
+    }
+  } finally {flushing=false}
+}
+function sendToSheet(item){
+  if(!sheetOn()) return;
+  item=Object.assign({qid:Date.now().toString(36)+Math.random().toString(36).slice(2,7)},item);
+  const box=LS.get('gn-outbox',[]);box.push(item);LS.set('gn-outbox',box.slice(-500));
+  flushOutbox();
+}
+const waDigits=()=>String(settings.waNumber||'').replace(/\D/g,'');
+const waLink=text=>`https://wa.me/${waDigits()}?text=${encodeURIComponent(text)}`;
+window.addEventListener('online',flushOutbox);
+
 async function resetProgress(pid){
   const del=sessions.filter(s=>pid==='all'||ownerOf(s)===pid);
   if(db){for(const s of del){try{await db.collection('sessions').doc(s.id).delete()}catch(e){}}}
@@ -869,6 +932,7 @@ function finish(){
   const s={id:'s'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),ts:Date.now(),day:today(),unit:L.u.id,unitName:L.u.es,
     xp,correct,total,mistakes:[...L.mistakes],seconds:secs,playerId:p.id,player:p.name};
   saveSession(s);
+  sendToSheet(Object.assign({type:'leccion'},s));
   const after=streak();
   const pct=Math.round(correct/total*100);
   $('#ex').innerHTML=`<div class="result">${mascot()}
@@ -879,7 +943,8 @@ function finish(){
       <div class="rs" style="--c:var(--ok)"><b>Aciertos</b><span>${pct}%</span></div>
       <div class="rs" style="--c:var(--t4)"><b>Tiempo</b><span>${Math.floor(secs/60)}:${String(secs%60).padStart(2,'0')}</span></div></div>
     ${after>before?`<p style="font-weight:800">${UI.flame(true).replace('<svg','<svg style="width:22px;height:22px;vertical-align:-4px"')} ¡Racha de ${after} ${after===1?'día':'días'}!</p>`:''}
-    ${s.mistakes.length?`<p class="muted">Para repasar: <span class="gn" style="color:var(--accent)">${s.mistakes.map(esc).join(', ')}</span></p>`:''}</div>`;
+    ${s.mistakes.length?`<p class="muted">Para repasar: <span class="gn" style="color:var(--accent)">${s.mistakes.map(esc).join(', ')}</span></p>`:''}
+    ${waDigits()&&settings.kidShare!==false?`<a class="wa" target="_blank" rel="noopener" href="${waLink(`${p.name} terminó la lección "${L.u.es}" de guaraní: ${correct} de ${total} correctas (${pct}%), +${xp} XP, en ${Math.floor(secs/60)}:${String(secs%60).padStart(2,'0')}.${s.mistakes.length?' Para repasar: '+s.mistakes.join(', ')+'.':''} 🐆`)}">${UI.chat()} Contale a tu familia</a>`:''}</div>`;
   $('#pbar').style.width='100%';
   setFoot('',`<button class="big" type="button" id="cont">Continuar</button>`);
   $('#cont').onclick=closeLayer;
@@ -971,6 +1036,31 @@ function renderFamily(){
         <form id="pinF" class="row" hidden style="margin-top:10px"><label class="field"><span>PIN nuevo</span><input id="np1" inputmode="numeric" maxlength="4" type="password" autocomplete="off"></label><label class="field"><span>Repetir</span><input id="np2" inputmode="numeric" maxlength="4" type="password" autocomplete="off"></label><button class="smallbtn" type="submit">Guardar PIN</button></form>
         <p id="delAsk" hidden style="margin-top:10px"></p>
       </div>
+      <div class="panel"><h3>Recibir los resultados</h3>
+        <div class="sendgrid">
+          <div class="sendbox"><h4>${UI.chat()} Por WhatsApp</h4>
+            <p class="muted">Escribí tu número con el código de país, por ejemplo 595981123456.</p>
+            <form class="row" id="waF" style="margin-top:8px"><label class="field"><span>Número</span><input id="waIn" inputmode="tel" value="${esc(settings.waNumber||'')}" placeholder="595981123456" style="width:170px"></label><button class="smallbtn" type="submit">Guardar</button></form>
+            <label class="check"><input type="checkbox" id="kidS" ${settings.kidShare!==false?'checked':''}><span>Al terminar cada lección, mostrar el botón <b>Contale a tu familia</b></span></label>
+            <a class="wa" id="waSend" target="_blank" rel="noopener" href="${waLink(report(list))}">${UI.chat()} Enviar este informe por WhatsApp</a>
+            ${waDigits()?'':'<p class="muted" style="font-size:.85rem">Sin número guardado, WhatsApp te deja elegir a quién mandarlo.</p>'}
+          </div>
+          <div class="sendbox"><h4>Planilla de Google (automático)</h4>
+            ${storeMode==='account'?'<p class="muted">En esta versión no hace falta: los resultados ya se guardan en tu cuenta. La planilla es para la versión de GitHub.</p>':`
+            <p class="muted">Cada lección y cada ingreso se anotan solos en una planilla tuya. Configurala una vez siguiendo los pasos de abajo.</p>
+            <form class="row" id="shF" style="margin-top:8px"><label class="field" style="flex:1 1 260px"><span>Dirección de la planilla (termina en /exec)</span><input id="shIn" value="${esc(settings.sheetUrl||'')}" placeholder="https://script.google.com/macros/s/…/exec" style="width:100%"></label><button class="smallbtn" type="submit">Guardar</button></form>
+            <p style="margin-top:8px;font-weight:700">${sheetOn()?`<span class="pill dom">Conectada</span> ${LS.get('gn-outbox',[]).length?LS.get('gn-outbox',[]).length+' envíos esperando conexión':''} <button class="smallbtn" type="button" id="shTest">Enviar prueba</button>`:'<span class="pill none">Sin configurar</span>'}</p>
+            <details class="steps"><summary>Cómo configurarla (10 minutos)</summary><ol>
+              <li>En la computadora, entrá a <b>sheets.new</b> con tu cuenta de Google. Ponele de nombre <i>Guaraní de ${esc(players()[0]?players()[0].name:'Thiago')}</i>.</li>
+              <li>Menú <b>Extensiones → Apps Script</b>. Borrá lo que aparece y pegá el código de abajo. Tocá <b>Guardar</b>.</li>
+              <li>Tocá <b>Implementar → Nueva implementación</b>. En el engranaje elegí <b>Aplicación web</b>. En <i>Ejecutar como</i> dejá <b>Yo</b> y en <i>Quién tiene acceso</i> elegí <b>Cualquier usuario</b>. Tocá <b>Implementar</b> y autorizá con tu cuenta (si dice "Google no verificó la app", tocá <i>Configuración avanzada → Ir a …</i>; es tu propio script).</li>
+              <li>Copiá la <b>URL de la aplicación web</b> (termina en <code>/exec</code>), pegala arriba y tocá <b>Guardar</b>. Después tocá <b>Enviar prueba</b> y mirá que aparezca una fila en la planilla.</li>
+            </ol>
+            <div class="row"><button class="smallbtn" type="button" id="codeCopy">Copiar el código</button></div>
+            <textarea id="codeT" readonly class="code">${esc(GAS_CODE)}</textarea></details>`}
+          </div>
+        </div>
+      </div>
       <div class="panel"><h3>Ajustes</h3>
         <div class="row">
           <button class="smallbtn" type="button" id="sndB">${UI.sound(soundOn).replace('<svg','<svg style="width:18px;height:18px;vertical-align:-3px"')} Sonido: ${soundOn?'sí':'no'}</button>
@@ -991,6 +1081,15 @@ function renderFamily(){
   $('#resetB').onclick=()=>{$('#resetAsk').hidden=false};
   $('#resetNo').onclick=()=>{$('#resetAsk').hidden=true};
   $('#resetYes').onclick=async()=>{await resetProgress(famFilter);toast('Progreso borrado');renderFamily();renderTop()};
+  $('#waF').onsubmit=async ev=>{ev.preventDefault();const v=$('#waIn').value.replace(/\D/g,'');
+    if(v&&v.length<8){toast('Revisá el número: falta el código de país');return}
+    settings=Object.assign({},settings,{waNumber:v});if(await saveSettings()){toast(v?'Número guardado':'Número borrado');renderFamily()}};
+  $('#kidS').onchange=async ev=>{settings=Object.assign({},settings,{kidShare:ev.target.checked});await saveSettings()};
+  const shF=$('#shF');if(shF)shF.onsubmit=async ev=>{ev.preventDefault();const v=$('#shIn').value.trim();
+    if(v&&!/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec/.test(v)){toast('Esa dirección no es de Apps Script. Tiene que terminar en /exec');return}
+    settings=Object.assign({},settings,{sheetUrl:v});if(await saveSettings()){toast(v?'Planilla guardada':'Planilla desconectada');flushOutbox();renderFamily()}};
+  const shT=$('#shTest');if(shT)shT.onclick=()=>{sendToSheet({type:'prueba',ts:Date.now(),player:'Prueba desde la app'});toast('Prueba enviada: revisá la planilla')};
+  const cc=$('#codeCopy');if(cc)cc.onclick=()=>{const ta=$('#codeT');try{navigator.clipboard.writeText(GAS_CODE).then(()=>toast('Código copiado'),()=>{ta.select();toast('Seleccioná y copiá el texto')})}catch(e){ta.select()}};
   $('#pinB').onclick=()=>{$('#pinF').hidden=false;$('#np1').focus()};
   $('#pinF').onsubmit=async ev=>{ev.preventDefault();const a=$('#np1').value,b=$('#np2').value;
     if(!/^\d{4}$/.test(a)){toast('El PIN tiene que tener 4 números');return}if(a!==b){toast('Los dos PIN no son iguales');return}
@@ -1010,7 +1109,7 @@ function renderFamily(){
 
 /* ---------- Arranque ---------- */
 renderAll();
-connectDb();
+connectDb().then(flushOutbox);
 })();
 </script>
 

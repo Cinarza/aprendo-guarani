@@ -21,3 +21,18 @@ y podés agregar jugadores o cambiar sus dibujos.
 En esta versión los resultados se guardan en el navegador del dispositivo donde juega el niño,
 así que el panel muestra lo que se jugó en ese mismo dispositivo y navegador.
 Con **Copiar informe** podés pasarte el resumen por WhatsApp o correo.
+
+## Recibir los resultados en tu celular
+En **Familia → Recibir los resultados** hay dos opciones:
+
+**Por WhatsApp.** Guardá tu número con el código de país (por ejemplo `595981123456`).
+El botón *Enviar este informe por WhatsApp* arma el resumen. Si dejás marcada la opción, al
+terminar cada lección el niño ve el botón *Contale a tu familia* para mandarte cómo le fue.
+
+**Planilla de Google (automático).** Cada lección y cada ingreso se anotan solos en una planilla tuya:
+1. En la computadora, entrá a `sheets.new` con tu cuenta de Google.
+2. Menú **Extensiones → Apps Script**. Borrá lo que aparece y pegá el contenido de `planilla-google.gs`. Guardá.
+3. **Implementar → Nueva implementación → Aplicación web**. *Ejecutar como*: **Yo**. *Quién tiene acceso*: **Cualquier usuario**. Implementá y autorizá.
+4. Copiá la URL que termina en `/exec`, pegala en la app (Familia → Planilla de Google) y tocá **Enviar prueba**.
+
+Si el dispositivo está sin internet, los resultados quedan en espera y se envían cuando vuelve la conexión.

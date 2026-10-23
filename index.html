@@ -143,6 +143,10 @@ button{font:inherit;color:inherit}
 .lc .ill{width:70px;height:70px}
 .lc .w{font-family:var(--display);font-weight:800;font-size:1.25rem;color:var(--accent);overflow-wrap:anywhere;line-height:1.15}
 .lc .t{font-weight:700}
+.lc .note{font-size:.78rem;font-weight:700;color:var(--t3);margin-top:2px}
+.ltip{margin-top:14px;display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:12px 14px}
+.ltip .badge{font-family:var(--display);color:#fff;background:var(--t3);border-radius:10px;padding:2px 10px;white-space:nowrap}
+.ltip p{min-width:0}
 .lc .p{font-size:.75rem;color:var(--muted);background:var(--soft);border-radius:999px;padding:1px 8px;margin-top:4px}
 @media (max-width:420px){.learn{grid-template-columns:1fr 1fr}}
 
@@ -295,7 +299,8 @@ const P={
   mom:{hair:'long',shirt:PINK}, dad:{hair:'short',shirt:'#2B6CB0',mus:1},
   gma:{hair:'bun',hc:'#B9B9B9',shirt:'#9B59B6',glasses:1,cane:1},
   gpa:{hair:'short',hc:'#B9B9B9',shirt:'#1F7A5A',glasses:1,beard:1,cane:1},
-  girl:{hair:'pig',shirt:YEL}, boy:{hair:'short',shirt:GREEN}
+  girl:{hair:'pig',shirt:YEL}, boy:{hair:'short',shirt:GREEN},
+  teenG:{hair:'long',hc:'#2B1A12',shirt:'#1F9E9E'}, teenB:{hair:'short',hc:'#2B1A12',shirt:'#D9531E'}
 };
 function catHead(fill,spots){
   let s=`<path d="M21 36 L23 12 L38 25Z" fill="${fill}"/><path d="M59 36 L57 12 L42 25Z" fill="${fill}"/><circle cx="40" cy="43" r="21" fill="${fill}"/>`;
@@ -375,7 +380,7 @@ const blob=c=>G(`<path d="M40 10 C59 10 70 25 67 42 C64 61 52 70 37 69 C21 68 10
 function icon(k){
   if(k.startsWith('num:')) return num(+k.slice(4));
   if(k.startsWith('col:')) return blob(k.slice(4));
-  if(k.startsWith('p:')) return G(place(person(P[k.slice(2)]),40,1));
+  if(k.startsWith('p:')){const n=k.slice(2);return G(place(person(P[n]),40,(n==='girl'||n==='boy')?.78:1))}
   return (IC[k]||IC.star)();
 }
 function nanduti(colorVar,label,size=100,multi=false){
@@ -413,10 +418,11 @@ const mascot=(cls='mascot')=>icon('jaguar').replace('class="ill"',`class="${cls}
 const UNITS=[
  {gn:"Ñemomaitei",es:"Saludos",items:[
    ["Mba'éichapa","¡Hola! / ¿Cómo estás?","mba-ÉI-cha-pa","hand"],["Iporã","Bien","i-po-RÃ","smile"],
-   ["Mba'éichapa ne pyhareve","Buenos días","ne py-ha-re-VE","sunrise"],["Mba'éichapa ne ka'aru","Buenas tardes","ne ka-a-RU","sunset"],
-   ["Mba'éichapa ne pyhare","Buenas noches","ne py-ha-RE","moon"],["Aguyje","Gracias","a-gu-y-JE","heart"],
+   ["Mba'éichapa nde pyhareve","Buenos días","nde py-ha-re-VE","sunrise"],["Mba'éichapa nde ka'aru","Buenas tardes","nde ka-a-RU","sunset"],
+   ["Mba'éichapa nde pyhare","Buenas noches","nde py-ha-RE","moon"],["Aguyje","Gracias","a-gu-y-JE","heart"],
    ["Hẽe","Sí","hẽ-Ẽ","check"],["Nahániri","No","na-HÁ-ni-ri","cross"],["Che réra","Me llamo","che RÉ-ra","tag"],
-   ["Jajotopata","¡Nos vemos!","ja-jo-to-pa-TA","kids"]]},
+   ["Jajotopata","¡Nos vemos!","ja-jo-to-pa-TA","kids"]],
+  tip:"<b>¿nde o ne?</b> Las dos quieren decir <b>tu</b>. Se usa <b class='gn'>nde</b> si la palabra que sigue es oral (<b class='gn'>nde pyhareve</b>) y <b class='gn'>ne</b> si es nasal, o sea que suena por la nariz (<b class='gn'>ne ñe'ẽ</b>, tu voz)."},
  {gn:"Papapy",es:"Los números",items:[
    ["peteĩ","uno","pe-te-Ĩ","num:1"],["mokõi","dos","mo-KÕI","num:2"],["mbohapy","tres","mbo-ha-PY","num:3"],
    ["irundy","cuatro","i-run-DY","num:4"],["po","cinco","PO","num:5"],["poteĩ","seis","po-te-Ĩ","num:6"],
@@ -426,8 +432,11 @@ const UNITS=[
    ["hovyũ","verde","ho-vy-Ũ","col:#43A047"],["morotĩ","blanco","mo-ro-TĨ","col:#FFFFFF"],["hũ","negro","HŨ","col:#262626"]]},
  {gn:"Che rogaygua",es:"Mi familia",items:[
    ["che sy","mi mamá","che SY","p:mom"],["che ru","mi papá","che RU","p:dad"],["che jarýi","mi abuela","che ja-RÝ-i","p:gma"],
-   ["che ramói","mi abuelo","che ra-MÓI","p:gpa"],["mitãkuña","niña","mi-tã-ku-ÑA","p:girl"],["mitãkaria'y","niño","mi-tã-ka-ri-A-Y","p:boy"],
-   ["che rogaygua","mi familia","che ro-gay-GUA","family"]]},
+   ["che ramói","mi abuelo","che ra-MÓI","p:gpa"],["che taita","mi abuelo","che TAI-ta","p:gpa","Sinónimo de che ramói"],
+   ["mitã","niño o niña","mi-TÃ","kids"],["mitã'i","niño pequeño","mi-tã-I","p:boy"],["mitãkuña'i","niña pequeña","mi-tã-ku-ña-I","p:girl"],
+   ["mitãkaria'y","muchacho","mi-tã-ka-ri-A-Y","p:teenB","Varón adolescente"],["mitãkuña","muchacha","mi-tã-ku-ÑA","p:teenG","Mujer adolescente"],
+   ["che rogaygua","mi familia","che ro-gay-GUA","family"]],
+  tip:"<b>Sinónimos:</b> <b class='gn'>che ramói</b> y <b class='gn'>che taita</b> quieren decir lo mismo, <b>mi abuelo</b>. <b>Por edad:</b> <b class='gn'>mitã</b> es niño o niña; <b class='gn'>mitã'i</b> y <b class='gn'>mitãkuña'i</b> son pequeños; <b class='gn'>mitãkaria'y</b> y <b class='gn'>mitãkuña</b> ya son adolescentes."},
  {gn:"Mymba",es:"Los animales",items:[
    ["jagua","perro","ja-GUA","dog"],["mbarakaja","gato","mba-ra-ka-JA","cat"],["vaka","vaca","va-KA","cow"],
    ["ryguasu","gallina","ry-gua-SU","hen"],["pira","pez","pi-RA","fish"],["guyra","pájaro","gu-y-RA","bird"],
@@ -442,26 +451,29 @@ const UNITS=[
    ["yvyra","árbol","y-vy-RA","tree"],["óga","casa","Ó-ga","house"],["mbo'ehao","escuela","mbo-e-ha-O","school"],
    ["chipa","chipa","CHI-pa","chipa"],["mandi'o","mandioca","man-di-O","mandioca"],["so'o","carne","so-O","meat"]]},
  {gn:"Mba'e ajapo",es:"Lo que hago",items:[
-   ["akaru","como","a-ka-RU","karu"],["aguata","camino","a-gua-TA","guata"],["añani","corro","a-ña-NI","nani"],
+   ["akaru","como (la comida)","a-ka-RU","karu","Almorzar o cenar"],["ha'u","como (algo)","ha-U","chipa","Che ha'u chipa = Yo como chipa"],["aguata","camino","a-gua-TA","guata"],["añani","corro","a-ña-NI","nani"],
    ["ake","duermo","a-KE","ke"],["apurahéi","canto","a-pu-ra-HÉI","sing"],["amoñe'ẽ","leo","a-mo-ñe-Ẽ","book"],
    ["ahai","escribo","a-HAI","pencil"],["ajahu","me baño","a-ja-HU","bath"],
-   ["nde rekaru","vos comés","nde re-ka-RU","karu"],["ha'e okaru","él come","ha-E o-ka-RU","karu"]]},
+   ["nde rekaru","vos comés","nde re-ka-RU","karu"],["ha'e okaru","él come","ha-E o-ka-RU","karu"]],
+  tip:"<b class='gn'>akaru</b> es <b>como</b> en el sentido de almorzar o cenar. Para decir <b>qué</b> comés se usa <b class='gn'>ha'u</b>: <b class='gn'>Che ha'u chipa</b> = Yo como chipa."},
  {gn:"Ñe'ẽjoapy",es:"Frases para usar",items:[
    ["Aipota y","Quiero agua","ai-po-TA Y","drop"],["Mba'épa kóva","¿Qué es esto?","mba-É-pa KÓ-va","ask"],
-   ["Kóva peteĩ jagua","Esto es un perro","KÓ-va pe-te-Ĩ ja-GUA","dog"],["Kuarahy hendy","El sol brilla","kua-ra-HY hen-DY","sun"],
-   ["Ama oky","Está lloviendo","a-MA o-KY","rain"],["Jagua oñani","El perro corre","ja-GUA o-ña-NI","nani"],
+   ["Kóva ha'e peteĩ jagua","Esto es un perro","KÓ-va ha-E pe-te-Ĩ ja-GUA","dog"],["Kuarahy hendy","El sol brilla","kua-ra-HY hen-DY","sun"],
+   ["Oky hína","Está lloviendo","o-KY HÍ-na","rain","hína = está pasando ahora"],["Jagua oñani","El perro corre","ja-GUA o-ña-NI","nani"],
    ["Che avy'a","Estoy feliz","che a-vy-A","smile"],["Rohayhu","Te quiero","ro-hay-HU","heart"],
-   ["Aime ógape","Estoy en casa","ai-ME Ó-ga-pe","house"]]},
+   ["Aime ógape","Estoy en casa","ai-ME Ó-ga-pe","house"]],
+  tip:"<b class='gn'>hína</b> indica que algo está pasando ahora: <b class='gn'>Oky hína</b> = Está lloviendo. Para preguntar se agrega <b class='gn'>-pa</b>: <b class='gn'>Mba'épa kóva?</b>"},
  {gn:"Mombe'u",es:"Decir que no y el cuento",items:[
    ["Ndakarúi","no como","nda-ka-RÚ-i","cross"],["Ndakéi","no duermo","nda-KÉ-i","ke"],["Ndaguatái","no camino","nda-gua-TÁ-i","guata"],
    ["Nañaníri","no corro","na-ña-NÍ-ri","nani"],["Areko peteĩ jagua","Tengo un perro","a-re-KO pe-te-Ĩ ja-GUA","toto"],
    ["Toto hũ ha morotĩ","Toto es negro y blanco","TO-to HŨ ha mo-ro-TĨ","toto"],["Ore roguata oñondive","Caminamos juntos","o-RE ro-gua-TA o-ño-ndi-VE","guata"],
-   ["Che akaru chipa","Yo como chipa","che a-ka-RU CHI-pa","chipa"],["Ahayhu che jagua","Quiero mucho a mi perro","a-hay-HU che ja-GUA","heart"]]},
+   ["Che ha'u chipa","Yo como chipa","che ha-U CHI-pa","chipa"],["Toto ndo'úi chipa","Toto no come chipa","TO-to ndo-Ú-i CHI-pa","toto"],["Ahayhu che jagua","Quiero mucho a mi perro","a-hay-HU che ja-GUA","heart"]]},
  {gn:"Ahai ha amoñe'ẽ",es:"Mis palabras de clase",extra:true,items:[
    ["tupa","cama","tu-PA","bed"],["yvoty","flor","y-vo-TY","flower"],["jagua","perro","ja-GUA","dog"],
-   ["ype","pato","y-PE","duck"],["kavara","cabra","ka-va-RA","goat"],["mitã'i","niño","mi-tã-I","p:boy"],
-   ["taita","abuelo","TAI-ta","p:gpa"],["haihá","lápiz","hai-HÁ","pencil"],["mbarakaja","gato","mba-ra-ka-JA","cat"],
-   ["vakapipopo","pelota","va-ka-pi-po-PO","ball"]]}
+   ["ype","pato","y-PE","duck"],["kavara","cabra","ka-va-RA","goat"],["mitã'i","niño pequeño","mi-tã-I","p:boy"],
+   ["taita","abuelo","TAI-ta","p:gpa","Sinónimo de ramói"],["haihá","lápiz","hai-HÁ","pencil"],["mbarakaja","gato","mba-ra-ka-JA","cat"],
+   ["vakapipopo","pelota","va-ka-pi-po-PO","ball"]],
+  tip:"<b class='gn'>taita</b> y <b class='gn'>ramói</b> son sinónimos: las dos quieren decir <b>abuelo</b>. <b class='gn'>haihá</b> (lápiz) viene de <b class='gn'>hai</b>, escribir."}
 ];
 const COLS=['var(--t1)','var(--t2)','var(--t3)','var(--t4)','var(--t5)'];
 const DCOLS=['#8E0F42','#9A6403','#13573F','#1C4C80','#9C3A12'];
@@ -782,7 +794,7 @@ $('#outBtn').onclick=()=>logout();
 
 /* ---------- Lección ---------- */
 let L=null;
-function learnGrid(u){return `<div class="learn">${u.items.map(it=>`<div class="lc">${icon(it[3])}<span class="w">${it[0]}</span><span class="t">${it[1]}</span><span class="p">Se dice: ${it[2]}</span></div>`).join('')}</div>`}
+function learnGrid(u){return `<div class="learn">${u.items.map(it=>`<div class="lc">${icon(it[3])}<span class="w">${it[0]}</span><span class="t">${it[1]}</span><span class="p">Se dice: ${it[2]}</span>${it[4]?`<span class="note">${it[4]}</span>`:''}</div>`).join('')}</div>${u.tip?`<div class="ltip"><b class="badge">¡Ojo!</b><p>${u.tip}</p></div>`:''}`}
 function showLearn(i,thenStart){
   const u=UNITS[i];
   setLayer(`<div class="screen" role="dialog" aria-label="Palabras nuevas">
@@ -835,7 +847,7 @@ function showEx(){
   const e=L.queue[L.pos], u=L.u, box=$('#ex');
   let check=null;
   const ask=t=>`<div class="ask">${mascot()}<p class="say">${t}</p></div>`;
-  const opts3=(t,f,n=3)=>{const others=pick(u.items.filter(x=>f(x)!==f(t)).filter((x,ix,a)=>a.findIndex(y=>f(y)===f(x))===ix),n-1);return shuffle([t,...others])};
+  const opts3=(t,f,n=3)=>{const others=pick(u.items.filter(x=>x[0]!==t[0]&&x[1]!==t[1]).filter((x,ix,a)=>a.findIndex(y=>f(y)===f(x))===ix),n-1);return shuffle([t,...others])};
   if(e.ty==='pic'){
     const others=[];shuffle(u.items).forEach(x=>{if(x[3]!==e.t[3]&&!others.some(o=>o[3]===x[3])&&others.length<3)others.push(x)});
     const o=shuffle([e.t,...others]);
@@ -854,7 +866,7 @@ function showEx(){
     check=sel=>({ok:o[sel]===e.t,ans:e.t[1]});
   } else if(e.ty==='tf'){
     const truth=Math.random()<.5;
-    const shown=truth?e.t:pick(u.items.filter(x=>x[3]!==e.t[3]&&x[0]!==e.t[0]),1)[0]||e.t;
+    const shown=truth?e.t:pick(u.items.filter(x=>x[3]!==e.t[3]&&x[0]!==e.t[0]&&x[1]!==e.t[1]),1)[0]||e.t;
     const isTrue=shown===e.t;
     box.innerHTML=`<p class="kind">¿Es correcto?</p><div class="hero-pic">${icon(e.t[3])}</div>${ask(`¿Esto es <b class="gn">${shown[0]}</b>?`)}
       <div class="choices pics"><button type="button" class="ch g" data-k="0" style="flex-direction:row"><span class="k">1</span>Hẽe · Sí</button><button type="button" class="ch g" data-k="1" style="flex-direction:row"><span class="k">2</span>Nahániri · No</button></div>`;

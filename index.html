@@ -204,6 +204,9 @@ td.n{font-variant-numeric:tabular-nums}
 .pcard{background:var(--card);border:2px solid var(--line);border-bottom-width:6px;border-radius:20px;padding:14px 18px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:140px}
 .pcard .ava{width:84px;height:84px}
 .pcard .gn{font-size:1.4rem}
+.namein{font:inherit;font-family:var(--display);font-weight:800;font-size:1.5rem;text-align:center;width:260px;max-width:100%;border:3px solid var(--line);border-bottom-width:5px;border-radius:16px;padding:6px 12px;background:var(--card);color:var(--ink)}
+.namein:focus{border-color:var(--accent);outline:none}
+#mascotHold{-webkit-touch-callout:none;user-select:none;-webkit-user-select:none;touch-action:manipulation}
 .dots{display:flex;gap:12px;margin-block:4px 8px}
 .dots i{width:18px;height:18px;border-radius:50%;border:3px solid var(--accent);display:block}
 .dots i.on{background:var(--accent)}
@@ -513,7 +516,8 @@ let soundOn=LS.get('gn-sound',true);
 let db=null, storeMode='device', ready=false;
 let current=null, screen=null, famFilter='all', lastAct=Date.now();
 
-const PWICONS=[["jagua","dog"],["mbarakaja","cat"],["kuarahy","sun"],["yvoty","flower"],["pira","fish"],["mbyja","star"],["óga","house"],["panambi","butterfly"],["ju'i","frog"]];
+const PWICONS=[["jagua","dog"],["mbarakaja","cat"],["vaka","cow"],["ryguasu","hen"],["pira","fish"],["guyra","bird"],["mbói","snake"],["panambi","butterfly"],["ju'i","frog"]];
+const normName=t=>String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
 const AVATARS=['jaguar','frog','bird','butterfly','dog','cat','fish','hen'];
 const hash=s=>{let h=2166136261;s='jg:'+s;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(36)};
 const players=()=>settings.players||[];
@@ -661,7 +665,7 @@ function pwPicker(holder,onChange){
   let seq=[];
   holder.innerHTML=`<div class="pwdots" aria-live="polite"></div><div class="pwgrid">${PWICONS.map((x,k)=>`<button type="button" class="pwk" data-k="${k}">${icon(x[1])}<span class="gn">${x[0]}</span></button>`).join('')}</div>
     <div class="row" style="justify-content:center;margin-top:10px"><button type="button" class="smallbtn" data-clear>Borrar y elegir de nuevo</button></div>`;
-  const draw=()=>{holder.querySelector('.pwdots').innerHTML=seq.length?seq.map(k=>`<span class="pwchosen">${icon(PWICONS[k][1])}<small class="gn">${PWICONS[k][0]}</small></span>`).join('<span class="arrow">→</span>'):'<span class="muted">Tocá 3 dibujos en orden</span>';
+  const draw=()=>{holder.querySelector('.pwdots').innerHTML=seq.length?seq.map(k=>`<span class="pwchosen">${icon(PWICONS[k][1])}<small class="gn">${PWICONS[k][0]}</small></span>`).join('<span class="arrow">→</span>'):'<span class="muted">Tocá 3 animales en orden</span>';
     holder.querySelectorAll('.pwk').forEach(b=>b.disabled=seq.length>=3);onChange(seq.slice())};
   holder.querySelector('.pwgrid').onclick=e=>{const b=e.target.closest('.pwk');if(!b||seq.length>=3)return;seq.push(+b.dataset.k);draw()};
   holder.querySelector('[data-clear]').onclick=()=>{seq=[];draw()};
@@ -679,8 +683,8 @@ function playerForm({title,intro,withPin,player,back,onSave}){
       <div class="panel"><h3>${withPin?'2. ':''}¿Quién va a jugar?</h3>
         <label class="field"><span>Nombre</span><input id="pname" maxlength="20" value="${esc(player?player.name:(withPin?(settings.name||'Thiago'):''))}"></label>
         <p style="margin-top:12px;font-weight:700">Elegí su animal</p><div class="avgrid" id="avg">${AVATARS.map(a=>`<button type="button" class="avb${a===av?' on':''}" data-a="${a}" aria-label="${a}">${icon(a)}</button>`).join('')}</div></div>
-      <div class="panel"><h3>${withPin?'3. ':''}Sus 3 dibujos secretos</h3>
-        <p class="muted">Esta es su contraseña. Elíjanla juntos y que la recuerde de memoria.${player?' Si no elegís nuevos, queda la que tenía.':''}</p>
+      <div class="panel"><h3>${withPin?'3. ':''}Sus 3 animales secretos</h3>
+        <p class="muted">Esta es su contraseña. Elíjanla juntos y que la recuerde de memoria. Para entrar va a escribir su nombre tal como está arriba.${player?' Si no elegís nuevos, quedan los que tenía.':''}</p>
         <div id="pwh" style="margin-top:10px"></div></div>
       <p id="pfMsg" class="err" aria-live="polite"></p>
       <button class="big pink" type="submit" style="justify-self:center">Guardar</button>
@@ -692,8 +696,8 @@ function playerForm({title,intro,withPin,player,back,onSave}){
     const name=$('#pname').value.trim();
     if(withPin){const a=$('#pin1').value,b=$('#pin2').value;if(!/^\d{4}$/.test(a)){msg.textContent='El PIN tiene que tener 4 números.';return}if(a!==b){msg.textContent='Los dos PIN no son iguales.';return}}
     if(!name){msg.textContent='Escribí el nombre.';return}
-    if(seq.length!==3&&!player){msg.textContent='Elegí 3 dibujos para la contraseña.';return}
-    if(seq.length>0&&seq.length<3){msg.textContent='Faltan dibujos: tienen que ser 3.';return}
+    if(seq.length!==3&&!player){msg.textContent='Elegí 3 animales para la contraseña.';return}
+    if(seq.length>0&&seq.length<3){msg.textContent='Faltan animales: tienen que ser 3.';return}
     const p=Object.assign({},player||{id:'p'+Date.now().toString(36)},{name,avatar:av});
     if(seq.length===3) p.pw=hash(p.id+':'+seq.join('-'));
     await onSave(p,withPin?hash('pin:'+$('#pin1').value):null);
@@ -701,54 +705,56 @@ function playerForm({title,intro,withPin,player,back,onSave}){
 }
 function showSetup(){
   playerForm({title:'Bienvenidos a Jaguarete\'i',withPin:true,
-    intro:'Esta parte la completa un adulto, una sola vez. Después cada niño entra con su nombre y sus 3 dibujos secretos.',
+    intro:'Esta parte la completa un adulto, una sola vez. Después, para entrar, el niño escribe su nombre y toca sus 3 animales secretos.',
     onSave:async(p,pin)=>{settings=Object.assign({},settings,{pinHash:pin,players:players().concat([p])});
       if(await saveSettings()){screen=null;$('#layer').innerHTML='';toast('¡Listo! Ahora '+p.name+' puede entrar.');renderAll()}}});
   screen='setup';
 }
 function showLogin(){
-  setLayer(`<div class="screen" role="dialog" aria-label="Iniciar sesión">
-    <div class="lbody pad"><div class="lbody-in login">
-      ${mascot()}
-      <h2 class="gn" style="color:var(--accent);font-size:2rem">Mba'éichapa!</h2>
-      <p style="font-weight:700;font-size:1.15rem">¿Quién va a jugar?</p>
-      <div class="plist">${players().map(p=>`<button type="button" class="pcard" data-p="${p.id}">${ava(p.avatar)}<span class="gn">${esc(p.name)}</span></button>`).join('')}</div>
-      <button type="button" class="smallbtn" id="adultBtn" style="margin-top:20px">${UI.family().replace('<svg','<svg style="width:18px;height:18px;vertical-align:-3px"')} Soy un adulto</button>
-      <p class="store-note">${storeMode==='account'?'Los resultados se guardan en la cuenta de la familia.':'Los resultados se guardan en este dispositivo.'}</p>
-    </div></div></div>`,'login');
-  $('#layer').querySelector('.plist').onclick=e=>{const b=e.target.closest('.pcard');if(b)showPad(players().find(p=>p.id===b.dataset.p))};
-  $('#adultBtn').onclick=()=>openGate();
-}
-const fails={};
-function showPad(p){
-  if(!p) return;
   let seq=[];
-  setLayer(`<div class="screen" role="dialog" aria-label="Contraseña de dibujos">
-    <div class="lhead pad"><button class="close" type="button" id="lx" aria-label="Volver">${UI.x()}</button></div>
-    <div class="lbody pad"><div class="lbody-in login">
-      ${ava(p.avatar,'mascot')}
-      <h2 class="gn" style="font-size:1.7rem">Hola, ${esc(p.name)}</h2>
-      <p style="font-weight:700">Tocá tus 3 dibujos secretos</p>
+  setLayer(`<div class="screen" role="dialog" aria-label="Iniciar sesión">
+    <div class="lbody pad"><form class="lbody-in login" id="loginF" autocomplete="off">
+      <span id="mascotHold">${mascot()}</span>
+      <h2 class="gn" style="color:var(--accent);font-size:2rem">Mba'éichapa!</h2>
+      <label for="loginName" style="font-weight:800;font-size:1.15rem">Escribí tu nombre</label>
+      <input id="loginName" class="namein" maxlength="20" autocomplete="off" autocapitalize="words" spellcheck="false">
+      <p style="font-weight:800;font-size:1.15rem;margin-top:6px">Tocá tus 3 animales</p>
       <div class="dots" id="dots">${[0,1,2].map(()=>'<i></i>').join('')}</div>
       <div class="pwgrid" id="pad">${PWICONS.map((x,k)=>`<button type="button" class="pwk" data-k="${k}">${icon(x[1])}<span class="gn">${x[0]}</span></button>`).join('')}</div>
       <p id="padMsg" class="err" aria-live="polite"></p>
-    </div></div></div>`,'login');
-  $('#lx').onclick=showLogin;
-  const f=fails[p.id]||(fails[p.id]={n:0,until:0});
+    </form></div></div>`,'login');
+  const msg=t=>{$('#padMsg').textContent=t};
   const dots=()=>$('#dots').querySelectorAll('i').forEach((d,i)=>d.classList.toggle('on',i<seq.length));
-  const lockMsg=()=>{const s=Math.ceil((f.until-Date.now())/1000);if(s>0){$('#padMsg').textContent=`Esperá ${s} segundos y probá otra vez.`;setTimeout(()=>{if(screen==='login'&&$('#padMsg'))lockMsg()},1000)}else $('#padMsg').textContent=''};
-  if(f.until>Date.now()) lockMsg();
-  $('#pad').onclick=e=>{const b=e.target.closest('.pwk');if(!b||f.until>Date.now())return;
+  const nameIn=$('#loginName');
+  $('#loginF').onsubmit=e=>e.preventDefault();
+  nameIn.oninput=()=>{if($('#padMsg').textContent)msg('')};
+  // acceso oculto para el adulto: mantener apretado el yaguareté 2 segundos
+  let holdT=null;const mh=$('#mascotHold');
+  mh.addEventListener('pointerdown',()=>{holdT=setTimeout(()=>openGate(),2000)});
+  ['pointerup','pointerleave','pointercancel'].forEach(ev=>mh.addEventListener(ev,()=>clearTimeout(holdT)));
+  mh.addEventListener('contextmenu',e=>e.preventDefault());
+  $('#pad').onclick=e=>{
+    const b=e.target.closest('.pwk');if(!b)return;
+    const typed=normName(nameIn.value);
+    if(!typed){msg('Primero escribí tu nombre.');nameIn.focus();return}
     seq.push(+b.dataset.k);dots();
     if(seq.length<3) return;
-    if(hash(p.id+':'+seq.join('-'))===p.pw){
-      f.n=0;logLogin(p.id,true);beep(true);current=p;lastAct=Date.now();$('#layer').innerHTML='';screen=null;renderAll();
-    } else {
-      f.n++;logLogin(p.id,false);beep(false);seq=[];
-      const pad=$('#pad');pad.classList.add('shake');setTimeout(()=>{pad.classList.remove('shake');dots()},450);
-      if(f.n>=5){f.until=Date.now()+30000;f.n=0;lockMsg()} else $('#padMsg').textContent='Esos no son tus dibujos. Probá otra vez.';
-    }};
+    const p=players().find(x=>normName(x.name)===typed);
+    const f=p?(fails[p.id]||(fails[p.id]={n:0,until:0})):null;
+    if(f&&f.until>Date.now()){seq=[];dots();msg(`Esperá ${Math.ceil((f.until-Date.now())/1000)} segundos y probá otra vez.`);return}
+    if(p&&hash(p.id+':'+seq.join('-'))===p.pw){
+      f.n=0;logLogin(p.id,true);beep(true);current=p;lastAct=Date.now();$('#layer').innerHTML='';screen=null;renderAll();return;
+    }
+    beep(false);seq=[];
+    const pad=$('#pad');pad.classList.add('shake');setTimeout(()=>{pad.classList.remove('shake');dots()},450);
+    if(!p){msg('No encuentro ese nombre. Revisá cómo lo escribiste.');return}
+    f.n++;logLogin(p.id,false);
+    if(f.n>=5){f.until=Date.now()+30000;f.n=0;msg('Esperá 30 segundos y probá otra vez.')}
+    else msg('Esos no son tus animales. Probá otra vez.');
+  };
+  setTimeout(()=>nameIn.focus(),50);
 }
+const fails={};
 function logout(){current=null;closeLayer()}
 document.addEventListener('pointerdown',()=>{lastAct=Date.now()},true);
 setInterval(()=>{if(current&&screen!=='lesson'&&Date.now()-lastAct>20*60*1000){current=null;$('#layer').innerHTML='';screen=null;renderAll()}},60000);
@@ -1034,16 +1040,16 @@ function renderFamily(){
         <div class="tl"><small>Aciertos</small><b>${t?Math.round(c/t*100)+'%':'–'}</b></div>
         <div class="tl"><small>Tiempo total</small><b>${mins} min</b></div>
       </div>
-      ${failsToday>=3?`<div class="panel alert"><b>Atención:</b> hoy hubo ${failsToday} intentos de entrar con dibujos equivocados. Revisá la lista de ingresos.</div>`:''}
+      ${failsToday>=3?`<div class="panel alert"><b>Atención:</b> hoy hubo ${failsToday} intentos de entrar con animales equivocados. Revisá la lista de ingresos.</div>`:''}
       ${list.length?'':`<div class="panel"><h3>Todavía no hay lecciones</h3><p class="muted">Cuando termine su primera lección, acá vas a ver los puntos, los aciertos por nivel y las palabras que le cuestan.</p></div>`}
       <div class="panel chart"><h3>XP por día · últimas 2 semanas</h3>${chart14(list)}</div>
       <div class="panel"><h3>Avance por nivel</h3><div class="tw"><table><thead><tr><th>Nivel</th><th>Tema</th><th>Lecciones</th><th>Aciertos</th><th>Última vez</th><th>Estado</th></tr></thead><tbody>${unitRows(list)}</tbody></table></div></div>
       <div class="panel"><h3>Palabras para repasar juntos</h3>${hw.length?`<div class="words">${hw.map(([w,n])=>`<span class="wchip"><span class="gn">${esc(w)}</span> · ${esc(all[w]||'')} <small>(${n} ${n===1?'error':'errores'})</small></span>`).join('')}</div>`:'<p class="muted">Sin errores registrados todavía.</p>'}</div>
       <div class="panel"><h3>Últimas lecciones</h3>${hist.length?`<div class="tw"><table><thead><tr><th>Fecha</th>${multi?'<th>Jugador</th>':''}<th>Nivel</th><th>Aciertos</th><th>XP</th><th>Tiempo</th></tr></thead><tbody>${hist.map(s=>`<tr><td>${fmtDate(s.ts)}</td>${multi?`<td>${esc(pName(ownerOf(s)))}</td>`:''}<td>${esc(uname(s.unit))}</td><td class="n">${s.correct}/${s.total}</td><td class="n">+${s.xp}</td><td class="n">${Math.floor(s.seconds/60)}:${String(s.seconds%60).padStart(2,'0')}</td></tr>`).join('')}</tbody></table></div>`:'<p class="muted">Sin lecciones todavía.</p>'}</div>
-      <div class="panel"><h3>Ingresos</h3><p class="muted" style="margin-bottom:8px">Cada vez que alguien toca los dibujos para entrar.</p>${lg.length?`<div class="tw"><table><thead><tr><th>Fecha</th><th>Perfil</th><th>Resultado</th></tr></thead><tbody>${lg.map(x=>`<tr><td>${fmtDate(x.ts)}</td><td>${esc(pName(x.p))}</td><td>${x.ok?'<span class="pill dom">Entró</span>':'<span class="pill low">Dibujos equivocados</span>'}</td></tr>`).join('')}</tbody></table></div>`:'<p class="muted">Sin ingresos todavía.</p>'}</div>
+      <div class="panel"><h3>Ingresos</h3><p class="muted" style="margin-bottom:8px">Cada vez que alguien escribe un nombre y toca los animales para entrar.</p>${lg.length?`<div class="tw"><table><thead><tr><th>Fecha</th><th>Perfil</th><th>Resultado</th></tr></thead><tbody>${lg.map(x=>`<tr><td>${fmtDate(x.ts)}</td><td>${esc(pName(x.p))}</td><td>${x.ok?'<span class="pill dom">Entró</span>':'<span class="pill low">Animales equivocados</span>'}</td></tr>`).join('')}</tbody></table></div>`:'<p class="muted">Sin ingresos todavía.</p>'}</div>
       <div class="panel"><h3>Jugadores</h3>
         <div class="plrows">${players().map(p=>`<div class="plrow">${ava(p.avatar,'cava2')}<b style="min-width:0">${esc(p.name)}</b><span class="muted">${sessions.filter(s=>ownerOf(s)===p.id).length} lecciones</span>
-          <span class="row" style="margin-left:auto"><button class="smallbtn" type="button" data-edit="${p.id}">Cambiar nombre o dibujos</button>${players().length>1?`<button class="smallbtn danger" type="button" data-del="${p.id}">Quitar</button>`:''}</span></div>`).join('')}</div>
+          <span class="row" style="margin-left:auto"><button class="smallbtn" type="button" data-edit="${p.id}">Cambiar nombre o animales</button>${players().length>1?`<button class="smallbtn danger" type="button" data-del="${p.id}">Quitar</button>`:''}</span></div>`).join('')}</div>
         <div class="row" style="margin-top:12px"><button class="smallbtn" type="button" id="addP">Agregar jugador</button><button class="smallbtn" type="button" id="pinB">Cambiar PIN</button></div>
         <form id="pinF" class="row" hidden style="margin-top:10px"><label class="field"><span>PIN nuevo</span><input id="np1" inputmode="numeric" maxlength="4" type="password" autocomplete="off"></label><label class="field"><span>Repetir</span><input id="np2" inputmode="numeric" maxlength="4" type="password" autocomplete="off"></label><button class="smallbtn" type="submit">Guardar PIN</button></form>
         <p id="delAsk" hidden style="margin-top:10px"></p>

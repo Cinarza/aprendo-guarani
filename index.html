@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<script src="config.js"></script>
 <title>Jaguarete'i Guaraní</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -216,6 +217,7 @@ td.n{font-variant-numeric:tabular-nums}
 .newacc{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;margin-top:10px;font-weight:800}
 .pwk.picked{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--card))}
 .gate .mascot{width:90px;height:90px}
+.pwgrid.busy{opacity:.55;pointer-events:none}
 .dots{display:flex;gap:12px;margin-block:4px 8px}
 .dots i{width:18px;height:18px;border-radius:50%;border:3px solid var(--accent);display:block}
 .dots i.on{background:var(--accent)}
@@ -522,7 +524,62 @@ let sessions=LS.get('gn-sessions',[]);
 let settings=LS.get('gn-settings',{});
 let logins=LS.get('gn-logins',[]);
 let soundOn=LS.get('gn-sound',true);
-let db=null, storeMode='device', ready=false;
+let db=null, storeMode='device', ready=false, offline=false;
+const API=String(window.JAGUARETEI_API||'').trim();
+let adminToken=null;
+const NETMSG='No hay conexión con la base de datos. Revisá internet y probá otra vez.';
+const ERRS={name_taken:'Ya hay un estudiante con ese nombre.',too_many:'Ya hay demasiados estudiantes.',bad_name:'Escribí un nombre.',bad_pin:'El PIN tiene que tener 4 números.',bad_seq:'Elegí 3 animales.',not_found:'Ese estudiante ya no existe.'};
+async function api(action,data){
+  const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({action},data||{}))});
+  if(!r.ok) throw new Error('http '+r.status);
+  return r.json();
+}
+if(API){sessions=[];settings={};logins=[]}
+let srvOut=LS.get('gn-srv-out',[]), srvFlushing=false;
+async function flushServer(){
+  if(!API||!current||!current.token||srvFlushing) return;
+  srvFlushing=true;
+  try{
+    for(const item of srvOut.filter(x=>x.pid===current.id)){
+      let r;try{r=await api('saveSession',{token:current.token,session:item.session})}catch(e){break}
+      if(r&&r.ok){srvOut=srvOut.filter(x=>x!==item);LS.set('gn-srv-out',srvOut)}
+      else if(r&&r.error==='auth'){break}
+      else {srvOut=srvOut.filter(x=>x!==item);LS.set('gn-srv-out',srvOut)}
+    }
+  } finally {srvFlushing=false}
+}
+window.addEventListener('online',()=>flushServer());
+function enterServer(r){
+  current=Object.assign({},r.player,{token:r.token});
+  sessions=(r.sessions||[]).slice();
+  srvOut.filter(x=>x.pid===current.id).forEach(x=>{if(!sessions.some(y=>y.id===x.session.id))sessions.push(x.session)});
+  settings=Object.assign({},settings,{players:[r.player],waNumber:r.waNumber||'',kidShare:r.kidShare!==false});
+  beep(true);lastAct=Date.now();$('#layer').innerHTML='';screen=null;renderAll();flushServer();
+}
+function dropSession(){
+  current=null;L=null;
+  if(API){sessions=[];logins=[];settings=Object.assign({},settings,{players:[]})}
+}
+async function loadAdmin(){
+  const r=await api('adminData',{adminToken});
+  if(!r.ok){adminToken=null;return false}
+  settings=Object.assign({},settings,{players:r.players||[],waNumber:r.waNumber||'',kidShare:r.kidShare!==false});
+  sessions=r.sessions||[];logins=r.logins||[];
+  return true;
+}
+async function adminDo(action,data,okMsg){
+  let r;
+  try{r=await api(action,Object.assign({adminToken},data))}catch(e){toast(NETMSG);return null}
+  if(r.ok){try{await loadAdmin()}catch(e){}if(okMsg)toast(okMsg);renderFamily();return r}
+  if(r.error==='auth'){toast('Pasó mucho tiempo. Entrá de nuevo con el PIN.');adminToken=null;openGate();return null}
+  toast(ERRS[r.error]||'No se pudo guardar. Probá otra vez.');return r;
+}
+function showOffline(){
+  setLayer(`<div class="screen" role="dialog" aria-label="Sin conexión"><div class="lbody pad"><div class="lbody-in login">
+    ${mascot()}<h2 style="font-size:1.5rem">No me puedo conectar</h2><p>${NETMSG}</p>
+    <button class="big pink" type="button" id="retry">Probar otra vez</button></div></div></div>`,'offline');
+  $('#retry').onclick=()=>{offline=false;ready=false;$('#layer').innerHTML='';screen=null;renderAll();connectDb()};
+}
 let current=null, screen=null, famFilter='all', lastAct=Date.now();
 
 const PWICONS=[["jagua","dog"],["mbarakaja","cat"],["vaka","cow"],["ryguasu","hen"],["pira","fish"],["guyra","bird"],["mbói","snake"],["panambi","butterfly"],["ju'i","frog"]];
@@ -535,6 +592,12 @@ const mine=()=>current?sessions.filter(s=>ownerOf(s)===current.id):[];
 const pName=id=>{const p=players().find(x=>x.id===id);return p?p.name:'—'};
 
 async function connectDb(){
+  if(API){
+    storeMode='server';
+    try{const r=await api('status');settings=Object.assign({},settings,{pinHash:r.hasPin?'server':''});offline=false}
+    catch(e){offline=true}
+    ready=true;renderAll();return;
+  }
   if(!window.claude||typeof window.claude.use!=='function'){ready=true;renderAll();return}
   let d=null; try{d=await window.claude.use('db')}catch(e){d=null}
   if(!d){ready=true;renderAll();return}
@@ -560,6 +623,7 @@ async function connectDb(){
   setTimeout(()=>{if(!ready){ready=true;renderAll()}},8000);
 }
 async function saveSession(s){
+  if(API){sessions=sessions.concat([s]);srvOut.push({pid:s.playerId,session:s});LS.set('gn-srv-out',srvOut);flushServer();return}
   sessions=sessions.concat([s]);
   if(db){try{await db.collection('sessions').doc(s.id).set(s)}catch(e){const p=LS.get('gn-pending',[]);p.push(s);LS.set('gn-pending',p)}return}
   LS.set('gn-sessions',sessions);
@@ -570,6 +634,7 @@ async function saveSettings(){
 }
 let loginWrite=Promise.resolve();
 function logLogin(pid,ok,kind){
+  if(API) return;
   const e={ts:Date.now(),p:pid,ok};if(kind)e.kind=kind;
   logins=logins.concat([e]);
   sendToSheet({type:'ingreso',ts:e.ts,player:pName(pid)+(kind==='registro'?' (se registró)':''),ok});
@@ -606,6 +671,7 @@ const waLink=text=>`https://wa.me/${waDigits()}?text=${encodeURIComponent(text)}
 window.addEventListener('online',flushOutbox);
 
 async function resetProgress(pid){
+  if(API){await adminDo('adminReset',{playerId:pid},'Progreso borrado');return}
   const del=sessions.filter(s=>pid==='all'||ownerOf(s)===pid);
   if(db){for(const s of del){try{await db.collection('sessions').doc(s.id).delete()}catch(e){}}}
   sessions=sessions.filter(s=>!del.includes(s));
@@ -652,6 +718,7 @@ function closeLayer(){$('#layer').innerHTML='';screen=null;L=null;renderAll()}
 /* ---------- Flujo principal ---------- */
 function renderAll(){
   if(!ready){$('#home').innerHTML=`<p class="store-note" style="margin-top:60px">Cargando…</p>`;return}
+  if(offline){if(screen!=='offline')showOffline();return}
   if(!settings.pinHash){if(screen!=='setup')showSetup();return}
   if(!current){if(!['start','login','register','fam','gate','form'].includes(screen))showStart();renderTop();return}
   renderTop();
@@ -709,7 +776,7 @@ function playerForm({title,intro,withPin,player,back,onSave}){
     if(seq.length>0&&seq.length<3){msg.textContent='Faltan animales: tienen que ser 3.';return}
     const p=Object.assign({},player||{id:'p'+Date.now().toString(36)},{name,avatar:av});
     if(seq.length===3) p.pw=hash(p.id+':'+seq.join('-'));
-    await onSave(p,withPin?hash('pin:'+$('#pin1').value):null);
+    await onSave(p,withPin?hash('pin:'+$('#pin1').value):null,seq.length===3?seq.slice():null);
   };
 }
 function showSetup(){
@@ -727,6 +794,10 @@ function showSetup(){
   $('#setF').onsubmit=async ev=>{ev.preventDefault();const a=$('#pin1').value,b=$('#pin2').value,m=$('#setMsg');
     if(!/^\d{4}$/.test(a)){m.textContent='El PIN tiene que tener 4 números.';return}
     if(a!==b){m.textContent='Los dos PIN no son iguales.';return}
+    if(API){let r;try{r=await api('setup',{pin:a})}catch(e){m.textContent=NETMSG;return}
+      if(r.ok||r.error==='pin_exists'){settings=Object.assign({},settings,{pinHash:'server'});screen=null;$('#layer').innerHTML='';toast(r.ok?'PIN guardado':'Ya había un PIN creado');renderAll()}
+      else m.textContent=ERRS[r.error]||'No se pudo guardar.';
+      return}
     settings=Object.assign({},settings,{pinHash:hash('pin:'+a)});
     if(await saveSettings()){screen=null;$('#layer').innerHTML='';toast('PIN guardado');renderAll()}};
 }
@@ -740,7 +811,7 @@ function showStart(){
         <button type="button" class="who" id="asKid">${icon('p:boy')}<span class="gn">Soy estudiante</span><small>Para aprender y jugar</small></button>
         <button type="button" class="who" id="asAdult">${icon('p:mom')}<span class="gn">Soy adulto</span><small>Para ver los resultados</small></button>
       </div>
-      <p class="store-note">${storeMode==='account'?'Los resultados se guardan en la cuenta.':'Los resultados se guardan en este dispositivo.'}</p>
+      <p class="store-note">${storeMode==='server'?'Los resultados se guardan en la base de datos de la familia.':storeMode==='account'?'Los resultados se guardan en la cuenta.':'Los resultados se guardan en este dispositivo.'}</p>
     </div></div></div>`,'start');
   $('#asKid').onclick=()=>showLogin();
   $('#asAdult').onclick=()=>openGate();
@@ -767,12 +838,22 @@ function showLogin(){
   const nameIn=$('#loginName');
   $('#loginF').onsubmit=e=>e.preventDefault();
   nameIn.oninput=()=>{if($('#padMsg').textContent)msg('')};
-  $('#pad').onclick=e=>{
-    const b=e.target.closest('.pwk');if(!b)return;
+  let busy=false;
+  $('#pad').onclick=async e=>{
+    const b=e.target.closest('.pwk');if(!b||busy)return;
     const typed=normName(nameIn.value);
     if(!typed){msg('Primero escribí tu nombre.');nameIn.focus();return}
     seq.push(+b.dataset.k);dots();
     if(seq.length<3) return;
+    if(API){
+      busy=true;msg('');$('#pad').classList.add('busy');
+      let r=null;try{r=await api('login',{name:nameIn.value,seq})}catch(e){r=null}
+      busy=false;const pad=$('#pad');if(!pad)return;pad.classList.remove('busy');
+      if(r&&r.ok){enterServer(r);return}
+      beep(false);seq=[];pad.classList.add('shake');setTimeout(()=>{pad.classList.remove('shake');dots()},450);
+      msg(!r?NETMSG:r.error==='no_name'?'No encuentro ese nombre. Si es tu primera vez, tocá Registrarme.':r.error==='locked'?'Esperá 30 segundos y probá otra vez.':'Esos no son tus animales. Probá otra vez.');
+      return;
+    }
     const p=players().find(x=>normName(x.name)===typed);
     const f=p?(fails[p.id]||(fails[p.id]={n:0,until:0})):null;
     if(f&&f.until>Date.now()){seq=[];dots();msg(`Esperá ${Math.ceil((f.until-Date.now())/1000)} segundos y probá otra vez.`);return}
@@ -813,14 +894,22 @@ function showRegister(prefill){
     const b=e.target.closest('.pwk');if(!b)return;
     const name=$('#regName').value.trim().replace(/\s+/g,' ');
     if(!name){msg('Primero escribí tu nombre.');$('#regName').focus();return}
-    if(players().some(x=>normName(x.name)===normName(name))){msg('Ya hay alguien con ese nombre. Si sos vos, volvé y entrá con tus animales.');return}
-    if(players().length>=12){msg('Ya hay muchos estudiantes. Pedile ayuda a un adulto.');return}
+    if(!API&&players().some(x=>normName(x.name)===normName(name))){msg('Ya hay alguien con ese nombre. Si sos vos, volvé y entrá con tus animales.');return}
+    if(!API&&players().length>=12){msg('Ya hay muchos estudiantes. Pedile ayuda a un adulto.');return}
     msg('');seq.push(+b.dataset.k);dots();
     b.classList.add('picked');setTimeout(()=>b.classList.remove('picked'),250);
     if(seq.length<3) return;
     if(!first){first=seq.slice();seq=[];setTimeout(()=>{dots();setStep()},300);beep(true);return}
     if(first.join('-')!==seq.join('-')){beep(false);first=null;seq=[];msg('No eran iguales. Elegí tus 3 animales otra vez.');
       const pad=$('#pad');pad.classList.add('shake');setTimeout(()=>{pad.classList.remove('shake');dots();setStep()},450);return}
+    if(API){
+      $('#regMsg').textContent='Guardando…';
+      let r=null;try{r=await api('register',{name,avatar:av,seq})}catch(e){r=null}
+      if(r&&r.ok){enterServer(r);toast(`¡Bienvenido, ${name}!`);return}
+      first=null;seq=[];dots();setStep();
+      msg(!r?NETMSG:r.error==='name_taken'?'Ya hay alguien con ese nombre. Si sos vos, volvé y entrá con tus animales.':(ERRS[r.error]||'No se pudo registrar. Probá otra vez.'));
+      return;
+    }
     const p={id:'p'+Date.now().toString(36),name,avatar:av,created:Date.now(),selfReg:true};
     p.pw=hash(p.id+':'+seq.join('-'));
     settings=Object.assign({},settings,{players:players().concat([p])});
@@ -831,9 +920,9 @@ function showRegister(prefill){
   };
 }
 const fails={};
-function logout(){current=null;$('#layer').innerHTML='';screen=null;L=null;renderAll()}
+function logout(){dropSession();$('#layer').innerHTML='';screen=null;renderAll()}
 document.addEventListener('pointerdown',()=>{lastAct=Date.now()},true);
-setInterval(()=>{if(current&&screen!=='lesson'&&Date.now()-lastAct>20*60*1000){current=null;$('#layer').innerHTML='';screen=null;renderAll()}},60000);
+setInterval(()=>{if(current&&screen!=='lesson'&&Date.now()-lastAct>20*60*1000){dropSession();$('#layer').innerHTML='';screen=null;renderAll()}},60000);
 
 /* ---------- Inicio ---------- */
 function renderHome(){
@@ -860,7 +949,7 @@ function renderHome(){
         <div class="crowns" aria-label="${cr} de 3 coronas">${[0,1,2].map(k=>UI.crown(k<cr)).join('')}</div>
       </div></section>`;
   });
-  h+=`<p class="store-note">${storeMode==='account'?'El progreso se guarda en la cuenta y la familia lo ve desde cualquier dispositivo.':'El progreso se guarda en este dispositivo.'}</p>`;
+  h+=`<p class="store-note">${storeMode==='server'?'El progreso se guarda en la base de datos de la familia: podés entrar desde cualquier dispositivo.':storeMode==='account'?'El progreso se guarda en la cuenta y la familia lo ve desde cualquier dispositivo.':'El progreso se guarda en este dispositivo.'}</p>`;
   $('#home').innerHTML=h;
 }
 
@@ -1055,10 +1144,16 @@ function openGate(){
       <input id="gateIn" inputmode="numeric" maxlength="4" autocomplete="off" type="password" aria-label="PIN de la familia">
       <p id="gateMsg" class="err" aria-live="polite"></p>
       <button class="big pink" type="submit">Entrar</button>
-      <p class="muted" style="font-size:.85rem;margin-top:10px">¿Te olvidaste el PIN? ${storeMode==='account'?'Pedile a Claude que lo reinicie desde el chat donde se creó esta app.':'Borrá los datos de este sitio en el navegador para empezar de nuevo (se pierden los resultados).'}</p></form></div></div>`,'gate');
+      <p class="muted" style="font-size:.85rem;margin-top:10px">¿Te olvidaste el PIN? ${storeMode==='server'?'Abrí la planilla → Extensiones → Apps Script → Configuración del proyecto → Propiedades del script y borrá la propiedad <b>pin</b>. Después la app te pide uno nuevo y los datos no se pierden.':storeMode==='account'?'Pedile a Claude que lo reinicie desde el chat donde se creó esta app.':'Borrá los datos de este sitio en el navegador para empezar de nuevo (se pierden los resultados).'}</p></form></div></div>`,'gate');
   $('#lx').onclick=()=>{if(prev==='login'||!current){screen=null;$('#layer').innerHTML='';renderAll()}else closeLayer()};
   $('#gateIn').focus();
-  $('#gate').onsubmit=ev=>{ev.preventDefault();if(hash('pin:'+$('#gateIn').value)===settings.pinHash){screen='fam';renderFamily()}else{$('#gateMsg').textContent='Ese PIN no es correcto.';$('#gateIn').value=''}};
+  $('#gate').onsubmit=async ev=>{ev.preventDefault();
+    if(API){const m=$('#gateMsg');m.textContent='Entrando…';
+      let r=null;try{r=await api('adminLogin',{pin:$('#gateIn').value})}catch(e){r=null}
+      if(r&&r.ok){adminToken=r.adminToken;let okd=false;try{okd=await loadAdmin()}catch(e){}
+        if(okd){screen='fam';renderFamily()}else m.textContent=NETMSG;return}
+      m.textContent=!r?NETMSG:r.error==='locked'?'Demasiados intentos. Esperá 5 minutos.':'Ese PIN no es correcto.';$('#gateIn').value='';return}
+    if(hash('pin:'+$('#gateIn').value)===settings.pinHash){screen='fam';renderFamily()}else{$('#gateMsg').textContent='Ese PIN no es correcto.';$('#gateIn').value=''}};
 }
 function fmtDate(ts){const d=new Date(ts);return d.toLocaleDateString('es-PY',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('es-PY',{hour:'2-digit',minute:'2-digit'})}
 const famList=()=>famFilter==='all'?sessions:sessions.filter(s=>ownerOf(s)===famFilter);
@@ -1122,7 +1217,7 @@ function renderFamily(){
       <div class="panel"><h3>Avance por nivel</h3><div class="tw"><table><thead><tr><th>Nivel</th><th>Tema</th><th>Lecciones</th><th>Aciertos</th><th>Última vez</th><th>Estado</th></tr></thead><tbody>${unitRows(list)}</tbody></table></div></div>
       <div class="panel"><h3>Palabras para repasar juntos</h3>${hw.length?`<div class="words">${hw.map(([w,n])=>`<span class="wchip"><span class="gn">${esc(w)}</span> · ${esc(all[w]||'')} <small>(${n} ${n===1?'error':'errores'})</small></span>`).join('')}</div>`:'<p class="muted">Sin errores registrados todavía.</p>'}</div>
       <div class="panel"><h3>Últimas lecciones</h3>${hist.length?`<div class="tw"><table><thead><tr><th>Fecha</th>${multi?'<th>Jugador</th>':''}<th>Nivel</th><th>Aciertos</th><th>XP</th><th>Tiempo</th></tr></thead><tbody>${hist.map(s=>`<tr><td>${fmtDate(s.ts)}</td>${multi?`<td>${esc(pName(ownerOf(s)))}</td>`:''}<td>${esc(uname(s.unit))}</td><td class="n">${s.correct}/${s.total}</td><td class="n">+${s.xp}</td><td class="n">${Math.floor(s.seconds/60)}:${String(s.seconds%60).padStart(2,'0')}</td></tr>`).join('')}</tbody></table></div>`:'<p class="muted">Sin lecciones todavía.</p>'}</div>
-      <div class="panel"><h3>Ingresos</h3><p class="muted" style="margin-bottom:8px">Cada vez que un estudiante se registra o entra con su nombre y sus animales.</p>${lg.length?`<div class="tw"><table><thead><tr><th>Fecha</th><th>Perfil</th><th>Resultado</th></tr></thead><tbody>${lg.map(x=>`<tr><td>${fmtDate(x.ts)}</td><td>${esc(pName(x.p))}</td><td>${x.kind==='registro'?'<span class="pill prac">Se registró</span>':x.ok?'<span class="pill dom">Entró</span>':'<span class="pill low">Animales equivocados</span>'}</td></tr>`).join('')}</tbody></table></div>`:'<p class="muted">Sin ingresos todavía.</p>'}</div>
+      <div class="panel"><h3>Ingresos</h3><p class="muted" style="margin-bottom:8px">Cada vez que un estudiante se registra o entra con su nombre y sus animales.</p>${lg.length?`<div class="tw"><table><thead><tr><th>Fecha</th><th>Perfil</th><th>Resultado</th></tr></thead><tbody>${lg.map(x=>`<tr><td>${fmtDate(x.ts)}</td><td>${esc(x.name||pName(x.p))}</td><td>${x.kind==='noname'?'<span class="pill none">Nombre no registrado</span>':x.kind==='registro'?'<span class="pill prac">Se registró</span>':x.ok?'<span class="pill dom">Entró</span>':'<span class="pill low">Animales equivocados</span>'}</td></tr>`).join('')}</tbody></table></div>`:'<p class="muted">Sin ingresos todavía.</p>'}</div>
       <div class="panel"><h3>Jugadores</h3>
         ${players().length?'':'<p class="muted">Todavía no hay estudiantes. Se registran desde la pantalla de inicio con <b>Soy estudiante → Registrarme</b>, o podés agregarlos vos.</p>'}
         <div class="plrows">${players().map(p=>`<div class="plrow">${ava(p.avatar,'cava2')}<b style="min-width:0">${esc(p.name)}</b><span class="muted">${sessions.filter(s=>ownerOf(s)===p.id).length} lecciones${p.created?' · desde '+new Date(p.created).toLocaleDateString('es-PY',{day:'numeric',month:'short'}):''}</span>
@@ -1140,19 +1235,10 @@ function renderFamily(){
             <a class="wa" id="waSend" target="_blank" rel="noopener" href="${waLink(report(list))}">${UI.chat()} Enviar este informe por WhatsApp</a>
             ${waDigits()?'':'<p class="muted" style="font-size:.85rem">Sin número guardado, WhatsApp te deja elegir a quién mandarlo.</p>'}
           </div>
-          <div class="sendbox"><h4>Planilla de Google (automático)</h4>
-            ${storeMode==='account'?'<p class="muted">En esta versión no hace falta: los resultados ya se guardan en tu cuenta. La planilla es para la versión de GitHub.</p>':`
-            <p class="muted">Cada lección y cada ingreso se anotan solos en una planilla tuya. Configurala una vez siguiendo los pasos de abajo.</p>
-            <form class="row" id="shF" style="margin-top:8px"><label class="field" style="flex:1 1 260px"><span>Dirección de la planilla (termina en /exec)</span><input id="shIn" value="${esc(settings.sheetUrl||'')}" placeholder="https://script.google.com/macros/s/…/exec" style="width:100%"></label><button class="smallbtn" type="submit">Guardar</button></form>
-            <p style="margin-top:8px;font-weight:700">${sheetOn()?`<span class="pill dom">Conectada</span> ${LS.get('gn-outbox',[]).length?LS.get('gn-outbox',[]).length+' envíos esperando conexión':''} <button class="smallbtn" type="button" id="shTest">Enviar prueba</button>`:'<span class="pill none">Sin configurar</span>'}</p>
-            <details class="steps"><summary>Cómo configurarla (10 minutos)</summary><ol>
-              <li>En la computadora, entrá a <b>sheets.new</b> con tu cuenta de Google. Ponele de nombre <i>Guaraní de ${esc(players()[0]?players()[0].name:'Thiago')}</i>.</li>
-              <li>Menú <b>Extensiones → Apps Script</b>. Borrá lo que aparece y pegá el código de abajo. Tocá <b>Guardar</b>.</li>
-              <li>Tocá <b>Implementar → Nueva implementación</b>. En el engranaje elegí <b>Aplicación web</b>. En <i>Ejecutar como</i> dejá <b>Yo</b> y en <i>Quién tiene acceso</i> elegí <b>Cualquier usuario</b>. Tocá <b>Implementar</b> y autorizá con tu cuenta (si dice "Google no verificó la app", tocá <i>Configuración avanzada → Ir a …</i>; es tu propio script).</li>
-              <li>Copiá la <b>URL de la aplicación web</b> (termina en <code>/exec</code>), pegala arriba y tocá <b>Guardar</b>. Después tocá <b>Enviar prueba</b> y mirá que aparezca una fila en la planilla.</li>
-            </ol>
-            <div class="row"><button class="smallbtn" type="button" id="codeCopy">Copiar el código</button></div>
-            <textarea id="codeT" readonly class="code">${esc(GAS_CODE)}</textarea></details>`}
+          <div class="sendbox"><h4>Base de datos</h4>
+            ${storeMode==='server'?'<p><span class="pill dom">Conectada</span></p><p class="muted">Todos los estudiantes, lecciones e ingresos se guardan en tu planilla de Google. También podés abrirla directamente para ver cada fila.</p>':
+              storeMode==='account'?'<p class="muted">Los resultados se guardan en tu cuenta de Claude.</p>':
+              '<p><span class="pill low">Solo este dispositivo</span></p><p class="muted">Este navegador guarda sus propios datos. Para tener una sola base de datos para todos los dispositivos, conectá la planilla de Google siguiendo el README del repositorio.</p>'}
           </div>
         </div>
       </div>
@@ -1163,12 +1249,15 @@ function renderFamily(){
           <button class="smallbtn danger" type="button" id="resetB">Borrar el progreso${famFilter==='all'?' de todos':' de '+esc(pName(famFilter))}</button>
           <span id="resetAsk" hidden><b>¿Seguro? No se puede deshacer.</b> <button class="smallbtn danger" type="button" id="resetYes">Sí, borrar</button> <button class="smallbtn" type="button" id="resetNo">Cancelar</button></span>
         </div>
-        <p class="muted" style="margin-top:12px;font-size:.9rem">${storeMode==='account'?'Los resultados se guardan en tu cuenta de Claude: los ves desde cualquier dispositivo donde abras esta página.':'Los resultados se guardan solo en este dispositivo y navegador. Para verlos, abrí este panel en el mismo dispositivo donde juega.'}</p>
+        <p class="muted" style="margin-top:12px;font-size:.9rem">${storeMode==='server'?'Todos los estudiantes y resultados están en tu planilla de Google, sin importar desde qué dispositivo entren.':storeMode==='account'?'Los resultados se guardan en tu cuenta de Claude: los ves desde cualquier dispositivo donde abras esta página.':'Los resultados se guardan solo en este dispositivo y navegador. Para verlos, abrí este panel en el mismo dispositivo donde juega.'}</p>
         <textarea id="repT" hidden readonly style="width:100%;height:160px;margin-top:10px;font:inherit;font-size:.85rem"></textarea>
       </div>
     </div></div></div>`,'fam');
-  $('#lx').onclick=()=>{if(current)closeLayer();else{screen=null;$('#layer').innerHTML='';renderAll()}};
-  const fo=$('#famOut');if(fo)fo.onclick=()=>{screen=null;$('#layer').innerHTML='';renderAll()};
+  const leaveFam=()=>{
+    if(API){adminToken=null;if(!current){dropSession()}else{settings=Object.assign({},settings,{players:[current]});sessions=sessions.filter(x=>x.playerId===current.id);logins=[]}}
+    if(current)closeLayer();else{screen=null;$('#layer').innerHTML='';renderAll()}};
+  $('#lx').onclick=leaveFam;
+  const fo=$('#famOut');if(fo)fo.onclick=leaveFam;
   const ch=$('#chips');if(ch)ch.onclick=e=>{const b=e.target.closest('.chip');if(b){famFilter=b.dataset.f;renderFamily()}};
   $('#sndB').onclick=()=>{soundOn=!soundOn;LS.set('gn-sound',soundOn);renderFamily()};
   $('#copyB').onclick=()=>{const r=report(list);
@@ -1179,8 +1268,9 @@ function renderFamily(){
   $('#resetYes').onclick=async()=>{await resetProgress(famFilter);toast('Progreso borrado');renderFamily();renderTop()};
   $('#waF').onsubmit=async ev=>{ev.preventDefault();const v=$('#waIn').value.replace(/\D/g,'');
     if(v&&v.length<8){toast('Revisá el número: falta el código de país');return}
+    if(API){await adminDo('adminSettings',{waNumber:v},v?'Número guardado':'Número borrado');return}
     settings=Object.assign({},settings,{waNumber:v});if(await saveSettings()){toast(v?'Número guardado':'Número borrado');renderFamily()}};
-  $('#kidS').onchange=async ev=>{settings=Object.assign({},settings,{kidShare:ev.target.checked});await saveSettings()};
+  $('#kidS').onchange=async ev=>{if(API){await adminDo('adminSettings',{kidShare:ev.target.checked});return}settings=Object.assign({},settings,{kidShare:ev.target.checked});await saveSettings()};
   const shF=$('#shF');if(shF)shF.onsubmit=async ev=>{ev.preventDefault();const v=$('#shIn').value.trim();
     if(v&&!/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec/.test(v)){toast('Esa dirección no es de Apps Script. Tiene que terminar en /exec');return}
     settings=Object.assign({},settings,{sheetUrl:v});if(await saveSettings()){toast(v?'Planilla guardada':'Planilla desconectada');flushOutbox();renderFamily()}};
@@ -1189,17 +1279,21 @@ function renderFamily(){
   $('#pinB').onclick=()=>{$('#pinF').hidden=false;$('#np1').focus()};
   $('#pinF').onsubmit=async ev=>{ev.preventDefault();const a=$('#np1').value,b=$('#np2').value;
     if(!/^\d{4}$/.test(a)){toast('El PIN tiene que tener 4 números');return}if(a!==b){toast('Los dos PIN no son iguales');return}
+    if(API){await adminDo('adminSetPin',{pin:a},'PIN cambiado');return}
     settings=Object.assign({},settings,{pinHash:hash('pin:'+a)});if(await saveSettings()){toast('PIN cambiado');renderFamily()}};
   $('#addP').onclick=()=>playerForm({title:'Agregar jugador',back:()=>renderFamily(),
-    onSave:async p=>{settings=Object.assign({},settings,{players:players().concat([p])});if(await saveSettings()){toast(p.name+' ya puede entrar');renderFamily()}}});
+    onSave:async(p,_,seq)=>{if(API){await adminDo('adminAddPlayer',{name:p.name,avatar:p.avatar,seq},p.name+' ya puede entrar');return}
+      settings=Object.assign({},settings,{players:players().concat([p])});if(await saveSettings()){toast(p.name+' ya puede entrar');renderFamily()}}});
   $('#layer').querySelector('.plrows').onclick=e=>{
     const ed=e.target.closest('[data-edit]'),dl=e.target.closest('[data-del]');
     if(ed){const p=players().find(x=>x.id===ed.dataset.edit);playerForm({title:'Cambiar '+p.name,player:p,back:()=>renderFamily(),
-      onSave:async np=>{settings=Object.assign({},settings,{players:players().map(x=>x.id===np.id?np:x)});if(current&&current.id===np.id)current=np;if(await saveSettings()){toast('Guardado');renderFamily()}}})}
+      onSave:async(np,_,seq)=>{if(API){await adminDo('adminUpdatePlayer',{id:np.id,name:np.name,avatar:np.avatar,seq:seq||undefined},'Guardado');return}
+        settings=Object.assign({},settings,{players:players().map(x=>x.id===np.id?np:x)});if(current&&current.id===np.id)current=np;if(await saveSettings()){toast('Guardado');renderFamily()}}})}
     if(dl){const p=players().find(x=>x.id===dl.dataset.del);const box=$('#delAsk');box.hidden=false;
       box.innerHTML=`<b>¿Quitar a ${esc(p.name)}?</b> Sus lecciones quedan en el historial. <button class="smallbtn danger" type="button" id="delYes">Sí, quitar</button> <button class="smallbtn" type="button" id="delNo">Cancelar</button>`;
       $('#delNo').onclick=()=>{box.hidden=true};
-      $('#delYes').onclick=async()=>{settings=Object.assign({},settings,{players:players().filter(x=>x.id!==p.id)});if(current&&current.id===p.id)current=null;if(famFilter===p.id)famFilter='all';if(await saveSettings())renderFamily()}}
+      $('#delYes').onclick=async()=>{if(API){if(famFilter===p.id)famFilter='all';await adminDo('adminDeletePlayer',{id:p.id},'Quitado');return}
+        settings=Object.assign({},settings,{players:players().filter(x=>x.id!==p.id)});if(current&&current.id===p.id)current=null;if(famFilter===p.id)famFilter='all';if(await saveSettings())renderFamily()}}
   };
 }
 

@@ -3,11 +3,24 @@
 App para que un niño de 2.º grado aprenda guaraní con lecciones cortas (estilo Duolingo):
 11 niveles, dibujos, traducción al castellano, puntos XP, racha diaria y coronas.
 
-## Publicarla con GitHub Pages
-1. Creá un repositorio nuevo en GitHub (por ejemplo `aprendo-guarani`).
-2. Subí `index.html` (botón **Add file → Upload files**).
-3. Entrá a **Settings → Pages**, elegí **Deploy from a branch**, rama `main`, carpeta `/ (root)` y guardá.
-4. En uno o dos minutos la app queda en `https://TU-USUARIO.github.io/aprendo-guarani/`.
+Sitio: https://cinarza.github.io/aprendo-guarani/
+
+## Base de datos central (una sola para todos los dispositivos)
+Los estudiantes, las lecciones y los ingresos se guardan en **una planilla de Google del adulto**.
+Así se puede entrar desde cualquier celular o computadora y el adulto ve todo en un solo lugar.
+
+Configuración (una sola vez, desde una computadora):
+1. Entrá a `sheets.new` con tu cuenta de Google. Ponele de nombre *Jaguarete'i – base de datos*.
+2. Menú **Extensiones → Apps Script**. Borrá lo que aparece y pegá todo el contenido de `servidor-google.gs`. Tocá **Guardar**.
+3. **Implementar → Nueva implementación**. En el engranaje elegí **Aplicación web**.
+   *Ejecutar como*: **Yo**. *Quién tiene acceso*: **Cualquier usuario**. Tocá **Implementar** y autorizá con tu cuenta.
+   (Si aparece "Google no verificó esta app", tocá *Configuración avanzada → Ir a …*: es tu propio script.)
+4. Copiá la **URL de la aplicación web** (termina en `/exec`) y pegala en `config.js`, entre las comillas.
+
+La planilla crea sola sus hojas: **Estudiantes**, **Lecciones**, **Ingresos** y **Ajustes**.
+El PIN y las claves de los estudiantes se guardan cifrados.
+
+Si más adelante cambiás el código del servidor: **Implementar → Gestionar implementaciones → editar → Versión nueva**, así la URL sigue siendo la misma.
 
 ## Inicio de sesión
 La primera vez que se abre, el adulto crea su **PIN** (4 números).
@@ -18,22 +31,17 @@ Después, la pantalla de inicio ofrece dos opciones:
 - **Soy adulto**: escribe el PIN y entra al panel de resultados.
 
 La sesión del estudiante se cierra con **Salir** o tras 20 minutos sin uso.
+Después de 5 intentos fallidos, el estudiante espera 30 segundos y el adulto 5 minutos.
 
 ## Resultados
 En el panel ves los resultados por estudiante, los ingresos y registros
-(incluidos los intentos con animales equivocados) y podés agregar, cambiar o quitar estudiantes.
+(incluidos los intentos con animales equivocados y nombres no registrados),
+y podés agregar, cambiar o quitar estudiantes, cambiar el PIN y borrar progreso.
 
-## Recibir los resultados en tu celular
-En **Familia → Recibir los resultados** hay dos opciones:
+**¿Te olvidaste el PIN?** En la planilla: Extensiones → Apps Script → Configuración del proyecto →
+Propiedades del script → borrá la propiedad `pin`. La app te pide uno nuevo y no se pierde nada.
 
-**Por WhatsApp.** Guardá tu número con el código de país (por ejemplo `595981123456`).
-El botón *Enviar este informe por WhatsApp* arma el resumen. Si dejás marcada la opción, al
-terminar cada lección el niño ve el botón *Contale a tu familia* para mandarte cómo le fue.
-
-**Planilla de Google (automático).** Cada lección y cada ingreso se anotan solos en una planilla tuya:
-1. En la computadora, entrá a `sheets.new` con tu cuenta de Google.
-2. Menú **Extensiones → Apps Script**. Borrá lo que aparece y pegá el contenido de `planilla-google.gs`. Guardá.
-3. **Implementar → Nueva implementación → Aplicación web**. *Ejecutar como*: **Yo**. *Quién tiene acceso*: **Cualquier usuario**. Implementá y autorizá.
-4. Copiá la URL que termina en `/exec`, pegala en la app (Familia → Planilla de Google) y tocá **Enviar prueba**.
-
-Si el dispositivo está sin internet, los resultados quedan en espera y se envían cuando vuelve la conexión.
+## WhatsApp
+En el panel podés guardar tu número (con código de país, por ejemplo `595981123456`).
+El botón *Enviar este informe por WhatsApp* arma el resumen, y al terminar cada lección el niño
+puede tocar *Contale a tu familia*.

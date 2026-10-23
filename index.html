@@ -207,6 +207,15 @@ td.n{font-variant-numeric:tabular-nums}
 .namein{font:inherit;font-family:var(--display);font-weight:800;font-size:1.5rem;text-align:center;width:260px;max-width:100%;border:3px solid var(--line);border-bottom-width:5px;border-radius:16px;padding:6px 12px;background:var(--card);color:var(--ink)}
 .namein:focus{border-color:var(--accent);outline:none}
 #mascotHold{-webkit-touch-callout:none;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.whogrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:100%;max-width:460px;margin-top:6px}
+.who{background:var(--card);border:2px solid var(--line);border-bottom-width:6px;border-radius:20px;padding:16px 10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}
+.who .ill{width:96px;height:96px}
+.who .gn{font-size:1.35rem;color:var(--accent)}
+.who small{color:var(--muted);font-weight:700}
+.who:active{transform:translateY(3px)}
+.newacc{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;margin-top:10px;font-weight:800}
+.pwk.picked{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--card))}
+.gate .mascot{width:90px;height:90px}
 .dots{display:flex;gap:12px;margin-block:4px 8px}
 .dots i{width:18px;height:18px;border-radius:50%;border:3px solid var(--accent);display:block}
 .dots i.on{background:var(--accent)}
@@ -560,10 +569,10 @@ async function saveSettings(){
   LS.set('gn-settings',settings);return true;
 }
 let loginWrite=Promise.resolve();
-function logLogin(pid,ok){
-  const e={ts:Date.now(),p:pid,ok};
+function logLogin(pid,ok,kind){
+  const e={ts:Date.now(),p:pid,ok};if(kind)e.kind=kind;
   logins=logins.concat([e]);
-  sendToSheet({type:'ingreso',ts:e.ts,player:pName(pid),ok});
+  sendToSheet({type:'ingreso',ts:e.ts,player:pName(pid)+(kind==='registro'?' (se registró)':''),ok});
   if(db){
     const day='d'+today();
     const entries=logins.filter(x=>dayKey(x.ts)===today()).slice(-200);
@@ -643,8 +652,8 @@ function closeLayer(){$('#layer').innerHTML='';screen=null;L=null;renderAll()}
 /* ---------- Flujo principal ---------- */
 function renderAll(){
   if(!ready){$('#home').innerHTML=`<p class="store-note" style="margin-top:60px">Cargando…</p>`;return}
-  if(!settings.pinHash||!players().length){if(screen!=='setup')showSetup();return}
-  if(!current){if(screen!=='login'&&screen!=='fam'&&screen!=='gate'&&screen!=='form')showLogin();renderTop();return}
+  if(!settings.pinHash){if(screen!=='setup')showSetup();return}
+  if(!current){if(!['start','login','register','fam','gate','form'].includes(screen))showStart();renderTop();return}
   renderTop();
   if(!screen) renderHome();
   else if(screen==='fam') renderFamily();
@@ -704,35 +713,60 @@ function playerForm({title,intro,withPin,player,back,onSave}){
   };
 }
 function showSetup(){
-  playerForm({title:'Bienvenidos a Jaguarete\'i',withPin:true,
-    intro:'Esta parte la completa un adulto, una sola vez. Después, para entrar, el niño escribe su nombre y toca sus 3 animales secretos.',
-    onSave:async(p,pin)=>{settings=Object.assign({},settings,{pinHash:pin,players:players().concat([p])});
-      if(await saveSettings()){screen=null;$('#layer').innerHTML='';toast('¡Listo! Ahora '+p.name+' puede entrar.');renderAll()}}});
-  screen='setup';
+  setLayer(`<div class="screen" role="dialog" aria-label="Configuración del adulto">
+    <div class="lbody pad"><form class="setup" id="setF" autocomplete="off">
+      <div class="login" style="padding-block:10px 0">${mascot()}<h2 style="font-size:1.6rem">Bienvenido a Jaguarete'i</h2></div>
+      <div class="panel"><h3>Creá tu PIN de adulto</h3>
+        <p class="muted">Son 4 números. Con este PIN entrás a ver los resultados. Los estudiantes se registran solos desde la pantalla de inicio.</p>
+        <div class="row" style="margin-top:10px"><label class="field"><span>PIN</span><input id="pin1" inputmode="numeric" maxlength="4" autocomplete="off" type="password"></label>
+        <label class="field"><span>Repetir</span><input id="pin2" inputmode="numeric" maxlength="4" autocomplete="off" type="password"></label></div></div>
+      <p id="setMsg" class="err" aria-live="polite"></p>
+      <button class="big pink" type="submit" style="justify-self:center">Guardar PIN</button>
+    </form></div></div>`,'setup');
+  $('#pin1').focus();
+  $('#setF').onsubmit=async ev=>{ev.preventDefault();const a=$('#pin1').value,b=$('#pin2').value,m=$('#setMsg');
+    if(!/^\d{4}$/.test(a)){m.textContent='El PIN tiene que tener 4 números.';return}
+    if(a!==b){m.textContent='Los dos PIN no son iguales.';return}
+    settings=Object.assign({},settings,{pinHash:hash('pin:'+a)});
+    if(await saveSettings()){screen=null;$('#layer').innerHTML='';toast('PIN guardado');renderAll()}};
 }
+function showStart(){
+  setLayer(`<div class="screen" role="dialog" aria-label="Inicio">
+    <div class="lbody pad"><div class="lbody-in login">
+      ${mascot()}
+      <h2 class="gn" style="color:var(--accent);font-size:2.2rem">Mba'éichapa!</h2>
+      <p style="font-weight:800;font-size:1.2rem">¿Cómo querés entrar?</p>
+      <div class="whogrid">
+        <button type="button" class="who" id="asKid">${icon('p:boy')}<span class="gn">Soy estudiante</span><small>Para aprender y jugar</small></button>
+        <button type="button" class="who" id="asAdult">${icon('p:mom')}<span class="gn">Soy adulto</span><small>Para ver los resultados</small></button>
+      </div>
+      <p class="store-note">${storeMode==='account'?'Los resultados se guardan en la cuenta.':'Los resultados se guardan en este dispositivo.'}</p>
+    </div></div></div>`,'start');
+  $('#asKid').onclick=()=>showLogin();
+  $('#asAdult').onclick=()=>openGate();
+}
+function animalPad(){return `<div class="dots" id="dots">${[0,1,2].map(()=>'<i></i>').join('')}</div>
+  <div class="pwgrid" id="pad">${PWICONS.map((x,k)=>`<button type="button" class="pwk" data-k="${k}">${icon(x[1])}<span class="gn">${x[0]}</span></button>`).join('')}</div>`}
+const backBtn=`<div class="lhead pad"><button class="close" type="button" id="back" aria-label="Volver">${'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" style="fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round"/></svg>'}</button></div>`;
 function showLogin(){
   let seq=[];
-  setLayer(`<div class="screen" role="dialog" aria-label="Iniciar sesión">
-    <div class="lbody pad"><form class="lbody-in login" id="loginF" autocomplete="off">
-      <span id="mascotHold">${mascot()}</span>
-      <h2 class="gn" style="color:var(--accent);font-size:2rem">Mba'éichapa!</h2>
+  setLayer(`<div class="screen" role="dialog" aria-label="Entrar como estudiante">${backBtn}
+    <div class="lbody pad"><form class="lbody-in login" id="loginF" autocomplete="off" style="padding-top:0">
+      ${icon('p:boy').replace('class="ill"','class="mascot"')}
       <label for="loginName" style="font-weight:800;font-size:1.15rem">Escribí tu nombre</label>
       <input id="loginName" class="namein" maxlength="20" autocomplete="off" autocapitalize="words" spellcheck="false">
       <p style="font-weight:800;font-size:1.15rem;margin-top:6px">Tocá tus 3 animales</p>
-      <div class="dots" id="dots">${[0,1,2].map(()=>'<i></i>').join('')}</div>
-      <div class="pwgrid" id="pad">${PWICONS.map((x,k)=>`<button type="button" class="pwk" data-k="${k}">${icon(x[1])}<span class="gn">${x[0]}</span></button>`).join('')}</div>
+      ${animalPad()}
       <p id="padMsg" class="err" aria-live="polite"></p>
+      <div class="newacc"><span>¿Es tu primera vez?</span><button type="button" class="big pink" id="goReg" style="min-width:0;flex:0 0 auto">Registrarme</button></div>
     </form></div></div>`,'login');
+  $('#back').onclick=()=>showStart();
+  $('#goReg').onclick=()=>showRegister($('#loginName').value);
   const msg=t=>{$('#padMsg').textContent=t};
   const dots=()=>$('#dots').querySelectorAll('i').forEach((d,i)=>d.classList.toggle('on',i<seq.length));
   const nameIn=$('#loginName');
   $('#loginF').onsubmit=e=>e.preventDefault();
   nameIn.oninput=()=>{if($('#padMsg').textContent)msg('')};
-  // acceso oculto para el adulto: mantener apretado el yaguareté 2 segundos
-  let holdT=null;const mh=$('#mascotHold');
-  mh.addEventListener('pointerdown',()=>{holdT=setTimeout(()=>openGate(),2000)});
-  ['pointerup','pointerleave','pointercancel'].forEach(ev=>mh.addEventListener(ev,()=>clearTimeout(holdT)));
-  mh.addEventListener('contextmenu',e=>e.preventDefault());
   $('#pad').onclick=e=>{
     const b=e.target.closest('.pwk');if(!b)return;
     const typed=normName(nameIn.value);
@@ -747,15 +781,57 @@ function showLogin(){
     }
     beep(false);seq=[];
     const pad=$('#pad');pad.classList.add('shake');setTimeout(()=>{pad.classList.remove('shake');dots()},450);
-    if(!p){msg('No encuentro ese nombre. Revisá cómo lo escribiste.');return}
+    if(!p){msg('No encuentro ese nombre. Si es tu primera vez, tocá Registrarme.');return}
     f.n++;logLogin(p.id,false);
     if(f.n>=5){f.until=Date.now()+30000;f.n=0;msg('Esperá 30 segundos y probá otra vez.')}
     else msg('Esos no son tus animales. Probá otra vez.');
   };
   setTimeout(()=>nameIn.focus(),50);
 }
+function showRegister(prefill){
+  let av='jaguar', seq=[], first=null;
+  setLayer(`<div class="screen" role="dialog" aria-label="Registrarme">${backBtn}
+    <div class="lbody pad"><form class="lbody-in login" id="regF" autocomplete="off" style="padding-top:0">
+      <h2 class="gn" style="color:var(--accent);font-size:1.8rem">¡Registrate!</h2>
+      <label for="regName" style="font-weight:800;font-size:1.15rem">1. Escribí tu nombre</label>
+      <input id="regName" class="namein" maxlength="20" autocomplete="off" autocapitalize="words" spellcheck="false" value="${esc(prefill||'')}">
+      <p style="font-weight:800;font-size:1.15rem;margin-top:8px">2. Elegí tu animal</p>
+      <div class="avgrid" id="avg" style="width:100%;max-width:420px">${AVATARS.map(a=>`<button type="button" class="avb${a===av?' on':''}" data-a="${a}" aria-label="${a}">${icon(a)}</button>`).join('')}</div>
+      <p style="font-weight:800;font-size:1.15rem;margin-top:8px" id="stepTxt">3. Elegí tus 3 animales secretos</p>
+      <p class="muted" id="stepSub">Acordate de cuáles son y en qué orden: con ellos vas a entrar.</p>
+      ${animalPad()}
+      <p id="regMsg" class="err" aria-live="polite"></p>
+    </form></div></div>`,'register');
+  $('#back').onclick=()=>showLogin();
+  $('#regF').onsubmit=e=>e.preventDefault();
+  $('#avg').onclick=e=>{const b=e.target.closest('.avb');if(!b)return;av=b.dataset.a;$('#avg').querySelectorAll('.avb').forEach(x=>x.classList.toggle('on',x===b))};
+  const msg=t=>{$('#regMsg').textContent=t};
+  const dots=()=>$('#dots').querySelectorAll('i').forEach((d,i)=>d.classList.toggle('on',i<seq.length));
+  const setStep=()=>{$('#stepTxt').textContent=first?'4. Repetí tus 3 animales':'3. Elegí tus 3 animales secretos';
+    $('#stepSub').textContent=first?'Tocalos otra vez en el mismo orden.':'Acordate de cuáles son y en qué orden: con ellos vas a entrar.'};
+  $('#pad').onclick=async e=>{
+    const b=e.target.closest('.pwk');if(!b)return;
+    const name=$('#regName').value.trim().replace(/\s+/g,' ');
+    if(!name){msg('Primero escribí tu nombre.');$('#regName').focus();return}
+    if(players().some(x=>normName(x.name)===normName(name))){msg('Ya hay alguien con ese nombre. Si sos vos, volvé y entrá con tus animales.');return}
+    if(players().length>=12){msg('Ya hay muchos estudiantes. Pedile ayuda a un adulto.');return}
+    msg('');seq.push(+b.dataset.k);dots();
+    b.classList.add('picked');setTimeout(()=>b.classList.remove('picked'),250);
+    if(seq.length<3) return;
+    if(!first){first=seq.slice();seq=[];setTimeout(()=>{dots();setStep()},300);beep(true);return}
+    if(first.join('-')!==seq.join('-')){beep(false);first=null;seq=[];msg('No eran iguales. Elegí tus 3 animales otra vez.');
+      const pad=$('#pad');pad.classList.add('shake');setTimeout(()=>{pad.classList.remove('shake');dots();setStep()},450);return}
+    const p={id:'p'+Date.now().toString(36),name,avatar:av,created:Date.now(),selfReg:true};
+    p.pw=hash(p.id+':'+seq.join('-'));
+    settings=Object.assign({},settings,{players:players().concat([p])});
+    if(await saveSettings()){
+      logLogin(p.id,true,'registro');beep(true);current=p;lastAct=Date.now();$('#layer').innerHTML='';screen=null;renderAll();
+      toast(`¡Bienvenido, ${name}!`);
+    } else {seq=[];first=null;dots();setStep()}
+  };
+}
 const fails={};
-function logout(){current=null;closeLayer()}
+function logout(){current=null;$('#layer').innerHTML='';screen=null;L=null;renderAll()}
 document.addEventListener('pointerdown',()=>{lastAct=Date.now()},true);
 setInterval(()=>{if(current&&screen!=='lesson'&&Date.now()-lastAct>20*60*1000){current=null;$('#layer').innerHTML='';screen=null;renderAll()}},60000);
 
@@ -975,11 +1051,11 @@ function openGate(){
   setLayer(`<div class="screen" role="dialog" aria-label="Acceso para la familia">
     <div class="lhead pad"><button class="close" type="button" id="lx" aria-label="Cerrar">${UI.x()}</button><h2 style="font-size:1.3rem">Para la familia</h2></div>
     <div class="lbody pad"><form class="gate" id="gate">
-      <p>Escribí el PIN de la familia para ver los resultados.</p>
+      ${mascot()}<p style="font-weight:800;font-size:1.1rem">Entrar como adulto</p><p>Escribí tu PIN de 4 números.</p>
       <input id="gateIn" inputmode="numeric" maxlength="4" autocomplete="off" type="password" aria-label="PIN de la familia">
       <p id="gateMsg" class="err" aria-live="polite"></p>
       <button class="big pink" type="submit">Entrar</button>
-      <p class="muted" style="font-size:.85rem">¿Te olvidaste el PIN? ${storeMode==='account'?'Pedile a Claude que lo reinicie desde el chat donde se creó esta app.':'Borrá los datos de este sitio en el navegador para empezar de nuevo (se pierden los resultados).'}</p></form></div></div>`,'gate');
+      <p class="muted" style="font-size:.85rem;margin-top:10px">¿Te olvidaste el PIN? ${storeMode==='account'?'Pedile a Claude que lo reinicie desde el chat donde se creó esta app.':'Borrá los datos de este sitio en el navegador para empezar de nuevo (se pierden los resultados).'}</p></form></div></div>`,'gate');
   $('#lx').onclick=()=>{if(prev==='login'||!current){screen=null;$('#layer').innerHTML='';renderAll()}else closeLayer()};
   $('#gateIn').focus();
   $('#gate').onsubmit=ev=>{ev.preventDefault();if(hash('pin:'+$('#gateIn').value)===settings.pinHash){screen='fam';renderFamily()}else{$('#gateMsg').textContent='Ese PIN no es correcto.';$('#gateIn').value=''}};
@@ -1030,7 +1106,7 @@ function renderFamily(){
   const failsToday=logins.filter(x=>!x.ok&&dayKey(x.ts)===today()&&(famFilter==='all'||x.p===famFilter)).length;
   const multi=players().length>1;
   setLayer(`<div class="screen" role="dialog" aria-label="Resultados">
-    <div class="lhead fam-head pad"><button class="close" type="button" id="lx" aria-label="Cerrar">${UI.x()}</button><h2 style="font-size:1.3rem">Resultados</h2></div>
+    <div class="lhead fam-head pad"><button class="close" type="button" id="lx" aria-label="Cerrar">${UI.x()}</button><h2 style="font-size:1.3rem;flex:1">Resultados</h2>${current?'':'<button class="smallbtn" type="button" id="famOut">Salir</button>'}</div>
     <div class="lbody pad"><div class="fam">
       ${multi?`<div class="chips" id="chips"><button type="button" class="chip${famFilter==='all'?' on':''}" data-f="all">Todos</button>${players().map(p=>`<button type="button" class="chip${famFilter===p.id?' on':''}" data-f="${p.id}">${ava(p.avatar,'cava')}${esc(p.name)}</button>`).join('')}</div>`:''}
       <div class="tiles">
@@ -1046,10 +1122,11 @@ function renderFamily(){
       <div class="panel"><h3>Avance por nivel</h3><div class="tw"><table><thead><tr><th>Nivel</th><th>Tema</th><th>Lecciones</th><th>Aciertos</th><th>Última vez</th><th>Estado</th></tr></thead><tbody>${unitRows(list)}</tbody></table></div></div>
       <div class="panel"><h3>Palabras para repasar juntos</h3>${hw.length?`<div class="words">${hw.map(([w,n])=>`<span class="wchip"><span class="gn">${esc(w)}</span> · ${esc(all[w]||'')} <small>(${n} ${n===1?'error':'errores'})</small></span>`).join('')}</div>`:'<p class="muted">Sin errores registrados todavía.</p>'}</div>
       <div class="panel"><h3>Últimas lecciones</h3>${hist.length?`<div class="tw"><table><thead><tr><th>Fecha</th>${multi?'<th>Jugador</th>':''}<th>Nivel</th><th>Aciertos</th><th>XP</th><th>Tiempo</th></tr></thead><tbody>${hist.map(s=>`<tr><td>${fmtDate(s.ts)}</td>${multi?`<td>${esc(pName(ownerOf(s)))}</td>`:''}<td>${esc(uname(s.unit))}</td><td class="n">${s.correct}/${s.total}</td><td class="n">+${s.xp}</td><td class="n">${Math.floor(s.seconds/60)}:${String(s.seconds%60).padStart(2,'0')}</td></tr>`).join('')}</tbody></table></div>`:'<p class="muted">Sin lecciones todavía.</p>'}</div>
-      <div class="panel"><h3>Ingresos</h3><p class="muted" style="margin-bottom:8px">Cada vez que alguien escribe un nombre y toca los animales para entrar.</p>${lg.length?`<div class="tw"><table><thead><tr><th>Fecha</th><th>Perfil</th><th>Resultado</th></tr></thead><tbody>${lg.map(x=>`<tr><td>${fmtDate(x.ts)}</td><td>${esc(pName(x.p))}</td><td>${x.ok?'<span class="pill dom">Entró</span>':'<span class="pill low">Animales equivocados</span>'}</td></tr>`).join('')}</tbody></table></div>`:'<p class="muted">Sin ingresos todavía.</p>'}</div>
+      <div class="panel"><h3>Ingresos</h3><p class="muted" style="margin-bottom:8px">Cada vez que un estudiante se registra o entra con su nombre y sus animales.</p>${lg.length?`<div class="tw"><table><thead><tr><th>Fecha</th><th>Perfil</th><th>Resultado</th></tr></thead><tbody>${lg.map(x=>`<tr><td>${fmtDate(x.ts)}</td><td>${esc(pName(x.p))}</td><td>${x.kind==='registro'?'<span class="pill prac">Se registró</span>':x.ok?'<span class="pill dom">Entró</span>':'<span class="pill low">Animales equivocados</span>'}</td></tr>`).join('')}</tbody></table></div>`:'<p class="muted">Sin ingresos todavía.</p>'}</div>
       <div class="panel"><h3>Jugadores</h3>
-        <div class="plrows">${players().map(p=>`<div class="plrow">${ava(p.avatar,'cava2')}<b style="min-width:0">${esc(p.name)}</b><span class="muted">${sessions.filter(s=>ownerOf(s)===p.id).length} lecciones</span>
-          <span class="row" style="margin-left:auto"><button class="smallbtn" type="button" data-edit="${p.id}">Cambiar nombre o animales</button>${players().length>1?`<button class="smallbtn danger" type="button" data-del="${p.id}">Quitar</button>`:''}</span></div>`).join('')}</div>
+        ${players().length?'':'<p class="muted">Todavía no hay estudiantes. Se registran desde la pantalla de inicio con <b>Soy estudiante → Registrarme</b>, o podés agregarlos vos.</p>'}
+        <div class="plrows">${players().map(p=>`<div class="plrow">${ava(p.avatar,'cava2')}<b style="min-width:0">${esc(p.name)}</b><span class="muted">${sessions.filter(s=>ownerOf(s)===p.id).length} lecciones${p.created?' · desde '+new Date(p.created).toLocaleDateString('es-PY',{day:'numeric',month:'short'}):''}</span>
+          <span class="row" style="margin-left:auto"><button class="smallbtn" type="button" data-edit="${p.id}">Cambiar nombre o animales</button><button class="smallbtn danger" type="button" data-del="${p.id}">Quitar</button></span></div>`).join('')}</div>
         <div class="row" style="margin-top:12px"><button class="smallbtn" type="button" id="addP">Agregar jugador</button><button class="smallbtn" type="button" id="pinB">Cambiar PIN</button></div>
         <form id="pinF" class="row" hidden style="margin-top:10px"><label class="field"><span>PIN nuevo</span><input id="np1" inputmode="numeric" maxlength="4" type="password" autocomplete="off"></label><label class="field"><span>Repetir</span><input id="np2" inputmode="numeric" maxlength="4" type="password" autocomplete="off"></label><button class="smallbtn" type="submit">Guardar PIN</button></form>
         <p id="delAsk" hidden style="margin-top:10px"></p>
@@ -1091,6 +1168,7 @@ function renderFamily(){
       </div>
     </div></div></div>`,'fam');
   $('#lx').onclick=()=>{if(current)closeLayer();else{screen=null;$('#layer').innerHTML='';renderAll()}};
+  const fo=$('#famOut');if(fo)fo.onclick=()=>{screen=null;$('#layer').innerHTML='';renderAll()};
   const ch=$('#chips');if(ch)ch.onclick=e=>{const b=e.target.closest('.chip');if(b){famFilter=b.dataset.f;renderFamily()}};
   $('#sndB').onclick=()=>{soundOn=!soundOn;LS.set('gn-sound',soundOn);renderFamily()};
   $('#copyB').onclick=()=>{const r=report(list);

@@ -10,17 +10,18 @@ App para que un niño de 2.º grado aprenda guaraní con lecciones cortas (estil
 4. En uno o dos minutos la app queda en `https://TU-USUARIO.github.io/aprendo-guarani/`.
 
 ## Inicio de sesión
-La primera vez, un adulto crea el **PIN** (4 números) y el perfil del niño con sus
-**3 animales secretos**. Después, para entrar, el niño escribe su nombre y toca sus 3 animales en orden.
-Se cierra la sesión con **Salir** o tras 20 minutos sin uso.
+La primera vez que se abre, el adulto crea su **PIN** (4 números).
+Después, la pantalla de inicio ofrece dos opciones:
+
+- **Soy estudiante**: escribe su nombre y toca sus 3 animales secretos en orden.
+  Si es su primera vez, toca **Registrarme**: escribe su nombre, elige su animal y sus 3 animales secretos (y los repite una vez).
+- **Soy adulto**: escribe el PIN y entra al panel de resultados.
+
+La sesión del estudiante se cierra con **Salir** o tras 20 minutos sin uso.
 
 ## Resultados
-Dentro de la app tocá **Familia**. En la pantalla de ingreso, mantené apretado el yaguareté 2 segundos. En los dos casos te pide el PIN.
-Ahí ves los resultados por jugador, los ingresos (incluidos los intentos con animales equivocados)
-y podés agregar jugadores o cambiar sus animales.
-En esta versión los resultados se guardan en el navegador del dispositivo donde juega el niño,
-así que el panel muestra lo que se jugó en ese mismo dispositivo y navegador.
-Con **Copiar informe** podés pasarte el resumen por WhatsApp o correo.
+En el panel ves los resultados por estudiante, los ingresos y registros
+(incluidos los intentos con animales equivocados) y podés agregar, cambiar o quitar estudiantes.
 
 ## Recibir los resultados en tu celular
 En **Familia → Recibir los resultados** hay dos opciones:

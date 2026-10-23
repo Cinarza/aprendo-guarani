@@ -4,9 +4,10 @@
  * Instalación (una sola vez):
  * 1. Creá una planilla nueva en sheets.new.
  * 2. Menú Extensiones → Apps Script. Borrá lo que aparece y pegá todo este archivo. Guardá.
- * 3. Implementar → Nueva implementación → Aplicación web.
+ * 3. Arriba elegí la función "autorizar" y tocá Ejecutar → Revisar permisos.
+ * 4. Implementar → Nueva implementación → Aplicación web.
  *    Ejecutar como: Yo · Quién tiene acceso: Cualquier usuario. Implementá y autorizá.
- * 4. Copiá la URL que termina en /exec y ponela en config.js de la app.
+ * 5. Copiá la URL que termina en /exec y ponela en config.js de la app.
  *
  * Hojas que crea solo: Estudiantes, Lecciones, Ingresos, Ajustes.
  * El PIN del adulto y las claves de los estudiantes se guardan cifrados (no se pueden leer).
@@ -21,6 +22,13 @@ var HEAD = {
 };
 var STUDENT_HOURS = 6;
 var MAX_STUDENTS = 30;
+
+/** Ejecutá esta función una vez desde el editor (botón Ejecutar) para dar los permisos. */
+function autorizar() {
+  sheet('Estudiantes'); sheet('Lecciones'); sheet('Ingresos'); sheet('Ajustes');
+  CacheService.getScriptCache().put('prueba', '1', 10);
+  Logger.log('Listo: la planilla quedó preparada.');
+}
 
 function doGet() {
   return out({ ok: true, app: 'jaguaretei', version: VERSION });

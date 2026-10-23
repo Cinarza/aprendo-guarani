@@ -159,6 +159,7 @@ button{font:inherit;color:inherit}
 
 /* Panel familiar */
 .fam{max-width:860px;margin:0 auto;padding-block:8px 60px;display:grid;gap:18px}
+.fam .field input{width:110px}
 .fam h2{font-size:1.7rem}
 .fam h3{font-size:1.2rem;margin-bottom:8px}
 .panel{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:14px 16px;min-width:0}
@@ -190,7 +191,49 @@ td.n{font-variant-numeric:tabular-nums}
 .muted{color:var(--muted)}
 .gate{max-width:420px;margin:40px auto;text-align:center;display:grid;gap:14px;justify-items:center}
 .gate input{font:inherit;font-family:var(--display);font-size:1.6rem;font-weight:800;width:120px;text-align:center;border:2px solid var(--line);border-radius:14px;padding:6px;background:var(--card);color:var(--ink)}
-.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:12px;font-weight:800;z-index:40}
+.err{color:var(--bad);font-weight:800;min-height:1.4em}
+.brand .ava,.brand svg{width:36px;height:36px;flex:none}
+@media (max-width:440px){.iconbtn .lbl{display:none}}
+.login{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding-block:24px 40px}
+.login .mascot{width:110px;height:110px}
+.plist{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-top:8px}
+.pcard{background:var(--card);border:2px solid var(--line);border-bottom-width:6px;border-radius:20px;padding:14px 18px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:140px}
+.pcard .ava{width:84px;height:84px}
+.pcard .gn{font-size:1.4rem}
+.dots{display:flex;gap:12px;margin-block:4px 8px}
+.dots i{width:18px;height:18px;border-radius:50%;border:3px solid var(--accent);display:block}
+.dots i.on{background:var(--accent)}
+.pwgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:360px;margin:0 auto}
+.pwk{background:var(--card);border:2px solid var(--line);border-bottom-width:5px;border-radius:16px;padding:8px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}
+.pwk .ill{width:64px;height:64px}
+.pwk .gn{font-size:.95rem;color:var(--accent)}
+.pwk:active{transform:translateY(3px)}
+.pwk:disabled{opacity:.5;cursor:default}
+@media (prefers-reduced-motion:no-preference){.shake{animation:shake .4s}}
+@keyframes shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+.setup{max-width:640px;margin:0 auto;padding-block:10px 40px;display:grid;gap:14px}
+.field{display:flex;flex-direction:column;align-items:flex-start;gap:4px;font-weight:700}
+.field input{font:inherit;border:2px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--bg);color:var(--ink);width:180px;max-width:100%}
+.avgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;margin-top:6px}
+@media (max-width:520px){.avgrid{grid-template-columns:repeat(4,1fr)}}
+.avb{background:var(--bg);border:3px solid var(--line);border-radius:14px;padding:4px;cursor:pointer;min-width:0}
+.avb .ill{width:100%;height:auto;aspect-ratio:1}
+.avb.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--card))}
+.pwdots{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;min-height:76px;margin-bottom:10px}
+.pwchosen{display:flex;flex-direction:column;align-items:center;background:var(--soft);border-radius:12px;padding:4px 8px}
+.pwchosen .ill{width:44px;height:44px}
+.pwchosen small{color:var(--accent)}
+.arrow{font-weight:800;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:flex;align-items:center;gap:6px;border:2px solid var(--line);background:var(--card);border-radius:999px;padding:4px 14px 4px 6px;font-weight:800;cursor:pointer}
+.chip[data-f="all"]{padding-left:14px}
+.chip.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--card))}
+.cava{width:26px;height:26px}
+.plrows{display:grid;gap:8px}
+.plrow{display:flex;flex-wrap:wrap;align-items:center;gap:10px;border-bottom:1px solid var(--line);padding-block:6px}
+.cava2{width:40px;height:40px}
+.panel.alert{border-color:var(--bad);background:var(--bad-bg)}
+.toast{width:max-content;max-width:90vw;text-align:center;position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:12px;font-weight:800;z-index:40}
 </style>
 
 </head>
@@ -201,6 +244,7 @@ td.n{font-variant-numeric:tabular-nums}
     <div class="stat" title="Días seguidos" id="stStreak"></div>
     <div class="stat" title="Puntos XP" id="stXp"></div>
     <button class="iconbtn" type="button" id="famBtn" aria-label="Panel para la familia"></button>
+    <button class="iconbtn" type="button" id="outBtn" aria-label="Salir y cambiar de jugador" hidden></button>
   </div>
 </header>
 <main class="home pad" id="home"></main>
@@ -347,6 +391,7 @@ const UI={
   check:()=>`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5 L10 17.5 L19 7" style="fill:none;stroke:#fff;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round"/></svg>`,
   x:()=>`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6 L18 18 M18 6 L6 18" style="fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round"/></svg>`,
   family:()=>`<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="7" r="3" style="fill:var(--ink)"/><circle cx="16.5" cy="9" r="2.5" style="fill:var(--ink)"/><path d="M2 20c0-4 3-7 6-7s6 3 6 7zM12.5 20c0-3 2-5.5 4-5.5s4.5 2.5 4.5 5.5z" style="fill:var(--ink)"/></svg>`,
+  out:()=>`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H5v16h5M15 8l4 4-4 4M19 12H9" style="fill:none;stroke:var(--ink);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"/></svg>`,
   sound:on=>`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" style="fill:var(--ink)"/>${on?'<path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" style="fill:none;stroke:var(--ink);stroke-width:2;stroke-linecap:round"/>':'<path d="M16 9l5 6M21 9l-5 6" style="fill:none;stroke:var(--ink);stroke-width:2;stroke-linecap:round"/>'}</svg>`
 };
 const mascot=(cls='mascot')=>icon('jaguar').replace('class="ill"',`class="${cls}"`);
@@ -414,60 +459,84 @@ const PRAISE=[["Iporãite!","¡Muy bien!"],["Upéicha!","¡Así es!"],["Nde katu
 /* ---------- Estado y guardado ---------- */
 const LS={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 let sessions=LS.get('gn-sessions',[]);
-let settings=Object.assign({name:'Thiago'},LS.get('gn-settings',{}));
+let settings=LS.get('gn-settings',{});
+let logins=LS.get('gn-logins',[]);
 let soundOn=LS.get('gn-sound',true);
-let db=null, storeMode='device';
+let db=null, storeMode='device', ready=false;
+let current=null, screen=null, famFilter='all', lastAct=Date.now();
+
+const PWICONS=[["jagua","dog"],["mbarakaja","cat"],["kuarahy","sun"],["yvoty","flower"],["pira","fish"],["mbyja","star"],["óga","house"],["panambi","butterfly"],["ju'i","frog"]];
+const AVATARS=['jaguar','frog','bird','butterfly','dog','cat','fish','hen'];
+const hash=s=>{let h=2166136261;s='jg:'+s;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(36)};
+const players=()=>settings.players||[];
+const ownerOf=s=>s.playerId||(players()[0]&&players()[0].id);
+const mine=()=>current?sessions.filter(s=>ownerOf(s)===current.id):[];
+const pName=id=>{const p=players().find(x=>x.id===id);return p?p.name:'—'};
 
 async function connectDb(){
-  if(!window.claude||typeof window.claude.use!=='function') return;
+  if(!window.claude||typeof window.claude.use!=='function'){ready=true;renderAll();return}
   let d=null; try{d=await window.claude.use('db')}catch(e){d=null}
-  if(!d) return;
+  if(!d){ready=true;renderAll();return}
   db=d; storeMode='account';
-  // sube lo que quedó pendiente en este dispositivo
-  const pend=LS.get('gn-pending',[]);
-  const left=[];
+  const pend=LS.get('gn-pending',[]);const left=[];
   for(const s of pend){try{await db.collection('sessions').doc(s.id).set(s)}catch(e){left.push(s)}}
   LS.set('gn-pending',left);
-  db.collection('sessions').onSnapshot(snap=>{
-    sessions=snap.docs.map(x=>Object.assign({id:x.id},x.data()));
-    sessions.sort((a,b)=>a.ts-b.ts);
-    renderAll();
-  },()=>{});
+  let gotSettings=false;
   db.doc('settings/main').onSnapshot(snap=>{
-    if(snap.exists){settings=Object.assign({name:'Thiago'},snap.data());renderAll()}
+    settings=snap.exists?Object.assign({},snap.data()):{};
+    gotSettings=true;ready=true;
+    if(current) current=players().find(p=>p.id===current.id)||null;
+    renderAll();
+  },()=>{ready=true;renderAll()});
+  db.collection('sessions').onSnapshot(snap=>{
+    sessions=snap.docs.map(x=>Object.assign({id:x.id},x.data())).sort((a,b)=>a.ts-b.ts);
+    if(gotSettings) renderAll();
   },()=>{});
-  renderAll();
+  db.collection('logins').onSnapshot(snap=>{
+    logins=snap.docs.flatMap(x=>(x.data().entries||[])).sort((a,b)=>a.ts-b.ts);
+    if(screen==='fam') renderFamily();
+  },()=>{});
+  setTimeout(()=>{if(!ready){ready=true;renderAll()}},8000);
 }
 async function saveSession(s){
-  if(db){
-    sessions=sessions.concat([s]);
-    try{await db.collection('sessions').doc(s.id).set(s);return}
-    catch(e){const p=LS.get('gn-pending',[]);p.push(s);LS.set('gn-pending',p);return}
-  }
-  sessions=sessions.concat([s]);LS.set('gn-sessions',sessions);
+  sessions=sessions.concat([s]);
+  if(db){try{await db.collection('sessions').doc(s.id).set(s)}catch(e){const p=LS.get('gn-pending',[]);p.push(s);LS.set('gn-pending',p)}return}
+  LS.set('gn-sessions',sessions);
 }
 async function saveSettings(){
-  if(db){try{await db.doc('settings/main').set(settings);return}catch(e){}}
-  LS.set('gn-settings',settings);
+  if(db){try{await db.doc('settings/main').set(settings);return true}catch(e){toast('No se pudo guardar. Probá de nuevo.');return false}}
+  LS.set('gn-settings',settings);return true;
 }
-async function resetAll(){
-  if(db){for(const s of sessions){try{await db.collection('sessions').doc(s.id).delete()}catch(e){}}}
-  sessions=[];LS.set('gn-sessions',[]);LS.set('gn-pending',[]);
+let loginWrite=Promise.resolve();
+function logLogin(pid,ok){
+  const e={ts:Date.now(),p:pid,ok};
+  logins=logins.concat([e]);
+  if(db){
+    const day='d'+today();
+    const entries=logins.filter(x=>dayKey(x.ts)===today()).slice(-200);
+    loginWrite=loginWrite.then(()=>db.collection('logins').doc(day).set({entries})).catch(()=>{});
+  } else LS.set('gn-logins',logins.slice(-300));
+}
+async function resetProgress(pid){
+  const del=sessions.filter(s=>pid==='all'||ownerOf(s)===pid);
+  if(db){for(const s of del){try{await db.collection('sessions').doc(s.id).delete()}catch(e){}}}
+  sessions=sessions.filter(s=>!del.includes(s));
+  if(!db) LS.set('gn-sessions',sessions);
 }
 
 /* ---------- Cálculos ---------- */
 const dayKey=d=>{const x=new Date(d);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')};
 const today=()=>dayKey(Date.now());
-function streak(){
-  const days=new Set(sessions.map(s=>s.day));let d=new Date();d.setHours(12,0,0,0);
+function streak(list=mine()){
+  const days=new Set(list.map(s=>s.day));let d=new Date();d.setHours(12,0,0,0);
   if(!days.has(dayKey(d))) d.setDate(d.getDate()-1);
   let n=0;while(days.has(dayKey(d))){n++;d.setDate(d.getDate()-1)}return n;
 }
-const totalXp=()=>sessions.reduce((a,s)=>a+(s.xp||0),0);
-const xpToday=()=>sessions.filter(s=>s.day===today()).reduce((a,s)=>a+(s.xp||0),0);
-const doneCount=id=>sessions.filter(s=>s.unit===id).length;
+const totalXp=(list=mine())=>list.reduce((a,s)=>a+(s.xp||0),0);
+const xpToday=()=>mine().filter(s=>s.day===today()).reduce((a,s)=>a+(s.xp||0),0);
+const doneCount=id=>mine().filter(s=>s.unit===id).length;
 function unlocked(i){const u=UNITS[i];return i===0||u.extra||doneCount(UNITS[i-1].id)>0}
-function missMap(id){const m={};sessions.filter(s=>s.unit===id).forEach(s=>(s.mistakes||[]).forEach(w=>m[w]=(m[w]||0)+1));return m}
+function missMap(id){const m={};mine().filter(s=>s.unit===id).forEach(s=>(s.mistakes||[]).forEach(w=>m[w]=(m[w]||0)+1));return m}
 
 /* ---------- Sonido ---------- */
 let actx=null;
@@ -487,23 +556,135 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 const pick=(a,n)=>shuffle(a).slice(0,n);
 const norm=s=>s.toLowerCase().replace(/[.,!?¡¿]/g,'').replace(/\s+/g,' ').trim();
+const ava=(k,cls)=>icon(k).replace('class="ill"',`class="${cls||'ava'}"`);
 function toast(t){const el=document.createElement('div');el.className='toast';el.textContent=t;document.body.appendChild(el);setTimeout(()=>el.remove(),2200)}
+function setLayer(html,name){$('#layer').innerHTML=html;screen=name}
+function closeLayer(){$('#layer').innerHTML='';screen=null;L=null;renderAll()}
 
-/* ---------- Inicio ---------- */
+/* ---------- Flujo principal ---------- */
+function renderAll(){
+  if(!ready){$('#home').innerHTML=`<p class="store-note" style="margin-top:60px">Cargando…</p>`;return}
+  if(!settings.pinHash||!players().length){if(screen!=='setup')showSetup();return}
+  if(!current){if(screen!=='login'&&screen!=='fam'&&screen!=='gate'&&screen!=='form')showLogin();renderTop();return}
+  renderTop();
+  if(!screen) renderHome();
+  else if(screen==='fam') renderFamily();
+}
 function renderTop(){
-  $('#brand').innerHTML=mascot('')+`<span>Jaguarete'i</span>`;
+  const p=current;
+  $('#brand').innerHTML=p?ava(p.avatar,'')+`<span>${esc(p.name)}</span>`:mascot('')+`<span>Jaguarete'i</span>`;
   const st=streak();
   $('#stStreak').innerHTML=UI.flame(st>0)+`<span>${st}</span>`;
   $('#stXp').innerHTML=UI.gem()+`<span>${totalXp()}</span>`;
-  $('#famBtn').innerHTML=UI.family()+`<span>Familia</span>`;
+  $('#famBtn').innerHTML=UI.family()+`<span class="lbl">Familia</span>`;
+  $('#outBtn').innerHTML=UI.out()+`<span class="lbl">Salir</span>`;
+  $('#outBtn').hidden=!p;
 }
+
+/* ---------- Configuración inicial y perfiles ---------- */
+function pwPicker(holder,onChange){
+  let seq=[];
+  holder.innerHTML=`<div class="pwdots" aria-live="polite"></div><div class="pwgrid">${PWICONS.map((x,k)=>`<button type="button" class="pwk" data-k="${k}">${icon(x[1])}<span class="gn">${x[0]}</span></button>`).join('')}</div>
+    <div class="row" style="justify-content:center;margin-top:10px"><button type="button" class="smallbtn" data-clear>Borrar y elegir de nuevo</button></div>`;
+  const draw=()=>{holder.querySelector('.pwdots').innerHTML=seq.length?seq.map(k=>`<span class="pwchosen">${icon(PWICONS[k][1])}<small class="gn">${PWICONS[k][0]}</small></span>`).join('<span class="arrow">→</span>'):'<span class="muted">Tocá 3 dibujos en orden</span>';
+    holder.querySelectorAll('.pwk').forEach(b=>b.disabled=seq.length>=3);onChange(seq.slice())};
+  holder.querySelector('.pwgrid').onclick=e=>{const b=e.target.closest('.pwk');if(!b||seq.length>=3)return;seq.push(+b.dataset.k);draw()};
+  holder.querySelector('[data-clear]').onclick=()=>{seq=[];draw()};
+  draw();
+}
+function playerForm({title,intro,withPin,player,back,onSave}){
+  let seq=[], av=player?player.avatar:'jaguar';
+  setLayer(`<div class="screen" role="dialog" aria-label="${esc(title)}">
+    <div class="lhead pad">${back?`<button class="close" type="button" id="lx" aria-label="Volver">${UI.x()}</button>`:''}<h2 style="font-size:1.3rem">${esc(title)}</h2></div>
+    <div class="lbody pad"><form class="setup" id="pf">
+      ${intro?`<p>${intro}</p>`:''}
+      ${withPin?`<div class="panel"><h3>1. PIN de la familia</h3><p class="muted">4 números para entrar al panel de resultados. Que el niño no lo vea.</p>
+        <div class="row" style="margin-top:8px"><label class="field"><span>PIN</span><input id="pin1" inputmode="numeric" maxlength="4" autocomplete="off" type="password"></label>
+        <label class="field"><span>Repetir</span><input id="pin2" inputmode="numeric" maxlength="4" autocomplete="off" type="password"></label></div></div>`:''}
+      <div class="panel"><h3>${withPin?'2. ':''}¿Quién va a jugar?</h3>
+        <label class="field"><span>Nombre</span><input id="pname" maxlength="20" value="${esc(player?player.name:(withPin?(settings.name||'Thiago'):''))}"></label>
+        <p style="margin-top:12px;font-weight:700">Elegí su animal</p><div class="avgrid" id="avg">${AVATARS.map(a=>`<button type="button" class="avb${a===av?' on':''}" data-a="${a}" aria-label="${a}">${icon(a)}</button>`).join('')}</div></div>
+      <div class="panel"><h3>${withPin?'3. ':''}Sus 3 dibujos secretos</h3>
+        <p class="muted">Esta es su contraseña. Elíjanla juntos y que la recuerde de memoria.${player?' Si no elegís nuevos, queda la que tenía.':''}</p>
+        <div id="pwh" style="margin-top:10px"></div></div>
+      <p id="pfMsg" class="err" aria-live="polite"></p>
+      <button class="big pink" type="submit" style="justify-self:center">Guardar</button>
+    </form></div></div>`,'form');
+  if(back) $('#lx').onclick=back;
+  $('#avg').onclick=e=>{const b=e.target.closest('.avb');if(!b)return;av=b.dataset.a;$('#avg').querySelectorAll('.avb').forEach(x=>x.classList.toggle('on',x===b))};
+  pwPicker($('#pwh'),s=>seq=s);
+  $('#pf').onsubmit=async ev=>{ev.preventDefault();const msg=$('#pfMsg');
+    const name=$('#pname').value.trim();
+    if(withPin){const a=$('#pin1').value,b=$('#pin2').value;if(!/^\d{4}$/.test(a)){msg.textContent='El PIN tiene que tener 4 números.';return}if(a!==b){msg.textContent='Los dos PIN no son iguales.';return}}
+    if(!name){msg.textContent='Escribí el nombre.';return}
+    if(seq.length!==3&&!player){msg.textContent='Elegí 3 dibujos para la contraseña.';return}
+    if(seq.length>0&&seq.length<3){msg.textContent='Faltan dibujos: tienen que ser 3.';return}
+    const p=Object.assign({},player||{id:'p'+Date.now().toString(36)},{name,avatar:av});
+    if(seq.length===3) p.pw=hash(p.id+':'+seq.join('-'));
+    await onSave(p,withPin?hash('pin:'+$('#pin1').value):null);
+  };
+}
+function showSetup(){
+  playerForm({title:'Bienvenidos a Jaguarete\'i',withPin:true,
+    intro:'Esta parte la completa un adulto, una sola vez. Después cada niño entra con su nombre y sus 3 dibujos secretos.',
+    onSave:async(p,pin)=>{settings=Object.assign({},settings,{pinHash:pin,players:players().concat([p])});
+      if(await saveSettings()){screen=null;$('#layer').innerHTML='';toast('¡Listo! Ahora '+p.name+' puede entrar.');renderAll()}}});
+  screen='setup';
+}
+function showLogin(){
+  setLayer(`<div class="screen" role="dialog" aria-label="Iniciar sesión">
+    <div class="lbody pad"><div class="lbody-in login">
+      ${mascot()}
+      <h2 class="gn" style="color:var(--accent);font-size:2rem">Mba'éichapa!</h2>
+      <p style="font-weight:700;font-size:1.15rem">¿Quién va a jugar?</p>
+      <div class="plist">${players().map(p=>`<button type="button" class="pcard" data-p="${p.id}">${ava(p.avatar)}<span class="gn">${esc(p.name)}</span></button>`).join('')}</div>
+      <button type="button" class="smallbtn" id="adultBtn" style="margin-top:20px">${UI.family().replace('<svg','<svg style="width:18px;height:18px;vertical-align:-3px"')} Soy un adulto</button>
+      <p class="store-note">${storeMode==='account'?'Los resultados se guardan en la cuenta de la familia.':'Los resultados se guardan en este dispositivo.'}</p>
+    </div></div></div>`,'login');
+  $('#layer').querySelector('.plist').onclick=e=>{const b=e.target.closest('.pcard');if(b)showPad(players().find(p=>p.id===b.dataset.p))};
+  $('#adultBtn').onclick=()=>openGate();
+}
+const fails={};
+function showPad(p){
+  if(!p) return;
+  let seq=[];
+  setLayer(`<div class="screen" role="dialog" aria-label="Contraseña de dibujos">
+    <div class="lhead pad"><button class="close" type="button" id="lx" aria-label="Volver">${UI.x()}</button></div>
+    <div class="lbody pad"><div class="lbody-in login">
+      ${ava(p.avatar,'mascot')}
+      <h2 class="gn" style="font-size:1.7rem">Hola, ${esc(p.name)}</h2>
+      <p style="font-weight:700">Tocá tus 3 dibujos secretos</p>
+      <div class="dots" id="dots">${[0,1,2].map(()=>'<i></i>').join('')}</div>
+      <div class="pwgrid" id="pad">${PWICONS.map((x,k)=>`<button type="button" class="pwk" data-k="${k}">${icon(x[1])}<span class="gn">${x[0]}</span></button>`).join('')}</div>
+      <p id="padMsg" class="err" aria-live="polite"></p>
+    </div></div></div>`,'login');
+  $('#lx').onclick=showLogin;
+  const f=fails[p.id]||(fails[p.id]={n:0,until:0});
+  const dots=()=>$('#dots').querySelectorAll('i').forEach((d,i)=>d.classList.toggle('on',i<seq.length));
+  const lockMsg=()=>{const s=Math.ceil((f.until-Date.now())/1000);if(s>0){$('#padMsg').textContent=`Esperá ${s} segundos y probá otra vez.`;setTimeout(()=>{if(screen==='login'&&$('#padMsg'))lockMsg()},1000)}else $('#padMsg').textContent=''};
+  if(f.until>Date.now()) lockMsg();
+  $('#pad').onclick=e=>{const b=e.target.closest('.pwk');if(!b||f.until>Date.now())return;
+    seq.push(+b.dataset.k);dots();
+    if(seq.length<3) return;
+    if(hash(p.id+':'+seq.join('-'))===p.pw){
+      f.n=0;logLogin(p.id,true);beep(true);current=p;lastAct=Date.now();$('#layer').innerHTML='';screen=null;renderAll();
+    } else {
+      f.n++;logLogin(p.id,false);beep(false);seq=[];
+      const pad=$('#pad');pad.classList.add('shake');setTimeout(()=>{pad.classList.remove('shake');dots()},450);
+      if(f.n>=5){f.until=Date.now()+30000;f.n=0;lockMsg()} else $('#padMsg').textContent='Esos no son tus dibujos. Probá otra vez.';
+    }};
+}
+function logout(){current=null;closeLayer()}
+document.addEventListener('pointerdown',()=>{lastAct=Date.now()},true);
+setInterval(()=>{if(current&&screen!=='lesson'&&Date.now()-lastAct>20*60*1000){current=null;$('#layer').innerHTML='';screen=null;renderAll()}},60000);
+
+/* ---------- Inicio ---------- */
 function renderHome(){
   const xt=xpToday(),pct=Math.min(100,Math.round(xt/DAILY_GOAL*100));
-  let nextIdx=UNITS.findIndex((u,i)=>!u.extra&&unlocked(i)&&doneCount(u.id)===0);
-  if(nextIdx<0) nextIdx=-1;
+  const nextIdx=UNITS.findIndex((u,i)=>!u.extra&&unlocked(i)&&doneCount(u.id)===0);
   const offs=[0,-70,-100,-70,0,70,100,70];
-  let h=`<section class="hello">${mascot('ill')}<div style="min-width:0">
-    <h2><span class="gn" style="color:var(--accent)">Mba'éichapa, ${esc(settings.name||'')}!</span></h2>
+  let h=`<section class="hello">${ava(current.avatar,'ill')}<div style="min-width:0">
+    <h2><span class="gn" style="color:var(--accent)">Mba'éichapa, ${esc(current.name)}!</span></h2>
     <small>Meta de hoy: ${Math.min(xt,DAILY_GOAL)} de ${DAILY_GOAL} XP${xt>=DAILY_GOAL?' · ¡Cumpliste la meta!':''}</small>
     <div class="goal-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${DAILY_GOAL}" aria-valuenow="${Math.min(xt,DAILY_GOAL)}"><i style="width:${pct}%"></i></div></div></section>`;
   UNITS.forEach((u,i)=>{
@@ -525,32 +706,31 @@ function renderHome(){
   h+=`<p class="store-note">${storeMode==='account'?'El progreso se guarda en la cuenta y la familia lo ve desde cualquier dispositivo.':'El progreso se guarda en este dispositivo.'}</p>`;
   $('#home').innerHTML=h;
 }
-function renderAll(){renderTop();if(!$('#layer').firstChild)renderHome();else if(famOpen)renderFamily()}
 
 document.addEventListener('click',e=>{
+  if(!current) return;
   const s=e.target.closest('[data-start]');
   if(s){const i=+s.dataset.start;if(!unlocked(i)){toast('Primero terminá el nivel anterior');return}startLesson(i);return}
   const l=e.target.closest('[data-learn]');
   if(l){showLearn(+l.dataset.learn,false);return}
 });
 $('#famBtn').onclick=()=>openGate();
+$('#outBtn').onclick=()=>logout();
 
 /* ---------- Lección ---------- */
 let L=null;
 function learnGrid(u){return `<div class="learn">${u.items.map(it=>`<div class="lc">${icon(it[3])}<span class="w">${it[0]}</span><span class="t">${it[1]}</span><span class="p">Se dice: ${it[2]}</span></div>`).join('')}</div>`}
 function showLearn(i,thenStart){
   const u=UNITS[i];
-  $('#layer').innerHTML=`<div class="screen" role="dialog" aria-label="Palabras nuevas">
+  setLayer(`<div class="screen" role="dialog" aria-label="Palabras nuevas">
     <div class="lhead pad"><button class="close" type="button" id="lx" aria-label="Cerrar">${UI.x()}</button><h2 style="font-size:1.3rem">${thenStart?'Palabras nuevas':'Palabras del nivel'} · ${u.es}</h2></div>
     <div class="lbody pad"><div class="lbody-in">
       <div class="ask">${mascot()}<p class="say">${thenStart?'Mirá estas palabras y leelas en voz alta. ¡Después jugamos!':'Estas son las palabras de <b>'+u.es.toLowerCase()+'</b>.'}</p></div>
       ${learnGrid(u)}</div></div>
-    <div class="lfoot"><div class="lfoot-in pad"><button class="big ${thenStart?'':'pink'}" type="button" id="lgo">${thenStart?'¡Ya las vi!':'Practicar'}</button></div></div></div>`;
+    <div class="lfoot"><div class="lfoot-in pad"><button class="big ${thenStart?'':'pink'}" type="button" id="lgo">${thenStart?'¡Ya las vi!':'Practicar'}</button></div></div></div>`,'learn');
   $('#lx').onclick=closeLayer;
   $('#lgo').onclick=()=>{if(!unlocked(i)){closeLayer();toast('Primero terminá el nivel anterior');return}beginExercises(i)};
 }
-function closeLayer(){$('#layer').innerHTML='';famOpen=false;L=null;renderAll()}
-
 function startLesson(i){if(doneCount(UNITS[i].id)===0)showLearn(i,true);else beginExercises(i)}
 
 function buildExercises(u){
@@ -571,19 +751,18 @@ function buildExercises(u){
 }
 function beginExercises(i){
   const u=UNITS[i];
-  L={u,i,queue:buildExercises(u),pos:0,base:0,firstWrong:new Set(),retried:new Set(),mistakes:new Set(),t0:Date.now(),doneOk:0};
+  L={u,i,queue:buildExercises(u),pos:0,base:0,firstWrong:new Set(),retried:new Set(),mistakes:new Set(),t0:Date.now(),doneOk:0,player:current};
   L.base=L.queue.length;
-  $('#layer').innerHTML=`<div class="screen" role="dialog" aria-label="Lección">
+  setLayer(`<div class="screen" role="dialog" aria-label="Lección">
     <div class="lhead pad"><button class="close" type="button" id="lx" aria-label="Salir de la lección">${UI.x()}</button>
       <div class="prog" role="progressbar" aria-valuemin="0" aria-valuemax="100"><i id="pbar" style="width:0%"></i></div></div>
     <div class="lbody pad"><div class="lbody-in" id="ex"></div></div>
-    <div class="lfoot" id="foot"><div class="lfoot-in pad" id="footIn"></div></div></div>`;
+    <div class="lfoot" id="foot"><div class="lfoot-in pad" id="footIn"></div></div></div>`,'lesson');
   $('#lx').onclick=()=>{if(confirmQuit())closeLayer()};
   showEx();
 }
 let quitArmed=0;
 function confirmQuit(){if(Date.now()-quitArmed<3000)return true;quitArmed=Date.now();toast('Tocá la X otra vez para salir');return false}
-
 function setProgress(){const p=Math.round(L.doneOk/L.base*100);$('#pbar').style.width=p+'%'}
 function setFoot(state,html){const f=$('#foot');f.className='lfoot'+(state?' '+state:'');$('#footIn').innerHTML=html}
 
@@ -635,8 +814,8 @@ function showEx(){
   } else if(e.ty==='match'){
     const left=shuffle(e.set),right=shuffle(e.set);
     box.innerHTML=`<p class="kind">Uní las parejas</p>${ask('Tocá una palabra en guaraní y después su significado.')}
-      <div class="match"><div class="col">${left.map((x,k)=>`<button type="button" class="ch g" data-m="l" data-i="${e.set.indexOf(x)}">${x[0]}</button>`).join('')}</div>
-      <div class="col">${right.map((x,k)=>`<button type="button" class="ch" data-m="r" data-i="${e.set.indexOf(x)}">${x[1]}</button>`).join('')}</div></div>`;
+      <div class="match"><div class="col">${left.map(x=>`<button type="button" class="ch g" data-m="l" data-i="${e.set.indexOf(x)}">${x[0]}</button>`).join('')}</div>
+      <div class="col">${right.map(x=>`<button type="button" class="ch" data-m="r" data-i="${e.set.indexOf(x)}">${x[1]}</button>`).join('')}</div></div>`;
     let selL=null,selR=null,found=0,wrong=false;
     setFoot('',`<p class="muted fbtxt">Encontrá las ${e.set.length} parejas</p>`);
     box.querySelector('.match').onclick=ev=>{
@@ -654,7 +833,6 @@ function showEx(){
     };
     return;
   }
-  // elección simple
   let sel=null;
   box.querySelectorAll('.ch').forEach(b=>b.onclick=()=>{if(L.locked)return;box.querySelectorAll('.ch').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');sel=+b.dataset.k;$('#chk').disabled=false});
   L.locked=false;
@@ -684,17 +862,18 @@ function resolve(ok,ans,isMatch){
   c.onclick=()=>{L.pos++;showEx()};
 }
 function finish(){
+  const p=L.player;
   const total=L.base, correct=total-L.firstWrong.size, secs=Math.round((Date.now()-L.t0)/1000);
   const xp=correct+5+(correct===total?5:0);
   const before=streak();
   const s={id:'s'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),ts:Date.now(),day:today(),unit:L.u.id,unitName:L.u.es,
-    xp,correct,total,mistakes:[...L.mistakes],seconds:secs,player:settings.name||''};
+    xp,correct,total,mistakes:[...L.mistakes],seconds:secs,playerId:p.id,player:p.name};
   saveSession(s);
   const after=streak();
   const pct=Math.round(correct/total*100);
   $('#ex').innerHTML=`<div class="result">${mascot()}
     <h2>${pct===100?'¡Perfecto!':'¡Lección completa!'}</h2>
-    <p class="gn" style="font-size:1.3rem;color:var(--accent)">${pct>=80?'Iporãite':'Iporã'}, ${esc(settings.name||'')}!</p>
+    <p class="gn" style="font-size:1.3rem;color:var(--accent)">${pct>=80?'Iporãite':'Iporã'}, ${esc(p.name)}!</p>
     <div class="rstats">
       <div class="rs" style="--c:var(--gold)"><b>XP</b><span>+${xp}</span></div>
       <div class="rs" style="--c:var(--ok)"><b>Aciertos</b><span>${pct}%</span></div>
@@ -708,108 +887,129 @@ function finish(){
 }
 
 /* ---------- Panel familiar ---------- */
-let famOpen=false;
 function openGate(){
-  const a=3+Math.floor(Math.random()*6),b=4+Math.floor(Math.random()*6);
-  $('#layer').innerHTML=`<div class="screen" role="dialog" aria-label="Acceso para la familia">
+  const prev=screen;
+  setLayer(`<div class="screen" role="dialog" aria-label="Acceso para la familia">
     <div class="lhead pad"><button class="close" type="button" id="lx" aria-label="Cerrar">${UI.x()}</button><h2 style="font-size:1.3rem">Para la familia</h2></div>
     <div class="lbody pad"><form class="gate" id="gate">
-      <p>Esta parte es para los adultos. Para entrar, resolvé:</p>
-      <label for="gateIn" class="gn" style="font-size:2rem">${a} × ${b} =</label>
-      <input id="gateIn" inputmode="numeric" autocomplete="off" aria-label="Resultado">
-      <p id="gateMsg" class="muted" aria-live="polite"></p>
-      <button class="big pink" type="submit">Entrar</button></form></div></div>`;
-  $('#lx').onclick=closeLayer;
+      <p>Escribí el PIN de la familia para ver los resultados.</p>
+      <input id="gateIn" inputmode="numeric" maxlength="4" autocomplete="off" type="password" aria-label="PIN de la familia">
+      <p id="gateMsg" class="err" aria-live="polite"></p>
+      <button class="big pink" type="submit">Entrar</button>
+      <p class="muted" style="font-size:.85rem">¿Te olvidaste el PIN? ${storeMode==='account'?'Pedile a Claude que lo reinicie desde el chat donde se creó esta app.':'Borrá los datos de este sitio en el navegador para empezar de nuevo (se pierden los resultados).'}</p></form></div></div>`,'gate');
+  $('#lx').onclick=()=>{if(prev==='login'||!current){screen=null;$('#layer').innerHTML='';renderAll()}else closeLayer()};
   $('#gateIn').focus();
-  $('#gate').onsubmit=ev=>{ev.preventDefault();if(+$('#gateIn').value===a*b){famOpen=true;renderFamily()}else{$('#gateMsg').textContent='Ese no es el resultado. Probá de nuevo.'}};
+  $('#gate').onsubmit=ev=>{ev.preventDefault();if(hash('pin:'+$('#gateIn').value)===settings.pinHash){screen='fam';renderFamily()}else{$('#gateMsg').textContent='Ese PIN no es correcto.';$('#gateIn').value=''}};
 }
 function fmtDate(ts){const d=new Date(ts);return d.toLocaleDateString('es-PY',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('es-PY',{hour:'2-digit',minute:'2-digit'})}
-function chart14(){
+const famList=()=>famFilter==='all'?sessions:sessions.filter(s=>ownerOf(s)===famFilter);
+function chart14(list){
   const days=[];const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()-13);
-  for(let i=0;i<14;i++){const k=dayKey(d);days.push({k,label:d.getDate(),wd:'DLMMJVS'[d.getDay()],xp:sessions.filter(s=>s.day===k).reduce((a,s)=>a+s.xp,0)});d.setDate(d.getDate()+1)}
+  for(let i=0;i<14;i++){const k=dayKey(d);days.push({k,label:d.getDate(),wd:'DLMMJVS'[d.getDay()],xp:list.filter(s=>s.day===k).reduce((a,s)=>a+s.xp,0)});d.setDate(d.getDate()+1)}
   const max=Math.max(DAILY_GOAL,...days.map(x=>x.xp));const top=Math.ceil(max/10)*10;
   const W=640,H=220,l=34,r=10,t=14,b=40,cw=(W-l-r)/14;
   const y=v=>t+(H-t-b)*(1-v/top);
   let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="XP por día en las últimas dos semanas">`;
   [0,top/2,top].forEach(v=>{s+=`<line x1="${l}" x2="${W-r}" y1="${y(v)}" y2="${y(v)}" style="stroke:var(--line)"/><text x="${l-6}" y="${y(v)+4}" text-anchor="end" font-size="11" style="fill:var(--muted)">${v}</text>`});
-  s+=`<line x1="${l}" x2="${W-r}" y1="${y(DAILY_GOAL)}" y2="${y(DAILY_GOAL)}" style="stroke:var(--gold);stroke-dasharray:5 4;stroke-width:1.5"/> <text x="${l+4}" y="${y(DAILY_GOAL)-5}" text-anchor="start" font-size="11" font-weight="700" style="fill:var(--gold-d)">meta ${DAILY_GOAL}</text>`;
+  s+=`<line x1="${l}" x2="${W-r}" y1="${y(DAILY_GOAL)}" y2="${y(DAILY_GOAL)}" style="stroke:var(--gold);stroke-dasharray:5 4;stroke-width:1.5"/><text x="${l+4}" y="${y(DAILY_GOAL)-5}" text-anchor="start" font-size="11" font-weight="700" style="fill:var(--gold-d)">meta ${DAILY_GOAL}</text>`;
   days.forEach((x,i)=>{const cx=l+i*cw+cw/2,bw=cw*.62;
-    if(x.xp>0) s+=`<rect x="${cx-bw/2}" y="${y(x.xp)}" width="${bw}" height="${y(0)-y(x.xp)}" rx="4" style="fill:${x.xp>=DAILY_GOAL?'var(--ok)':'var(--t4)'}"><title>${x.k}: ${x.xp} XP</title></rect>`;
-    if(x.xp>0) s+=`<text x="${cx}" y="${y(x.xp)-4}" text-anchor="middle" font-size="11" font-weight="700" style="fill:var(--ink)">${x.xp}</text>`;
+    if(x.xp>0) s+=`<rect x="${cx-bw/2}" y="${y(x.xp)}" width="${bw}" height="${y(0)-y(x.xp)}" rx="4" style="fill:${x.xp>=DAILY_GOAL?'var(--ok)':'var(--t4)'}"><title>${x.k}: ${x.xp} XP</title></rect><text x="${cx}" y="${y(x.xp)-4}" text-anchor="middle" font-size="11" font-weight="700" style="fill:var(--ink)">${x.xp}</text>`;
     s+=`<text x="${cx}" y="${H-b+16}" text-anchor="middle" font-size="11" style="fill:${i===13?'var(--ink)':'var(--muted)'}" font-weight="${i===13?800:400}">${x.wd}</text><text x="${cx}" y="${H-b+30}" text-anchor="middle" font-size="11" style="fill:var(--muted)">${x.label}</text>`});
   return s+'</svg>';
 }
-function unitRows(){
+function unitRows(list){
   return UNITS.map(u=>{
-    const ss=sessions.filter(s=>s.unit===u.id);const c=ss.reduce((a,s)=>a+s.correct,0),t=ss.reduce((a,s)=>a+s.total,0);
+    const ss=list.filter(s=>s.unit===u.id);const c=ss.reduce((a,s)=>a+s.correct,0),t=ss.reduce((a,s)=>a+s.total,0);
     const acc=t?Math.round(c/t*100):null;const last=ss.length?ss[ss.length-1].ts:null;
     let pill='<span class="pill none">Sin empezar</span>';
     if(ss.length){pill=acc<60?'<span class="pill low">Necesita ayuda</span>':(ss.length>=3&&acc>=80?'<span class="pill dom">Dominado</span>':'<span class="pill prac">Practicando</span>')}
     return `<tr><td>${u.extra?'Extra':u.n}</td><td><b>${u.es}</b><br><span class="gn" style="color:var(--accent);font-size:.9rem">${u.gn}</span></td><td class="n">${ss.length}</td><td class="n">${acc==null?'–':acc+'%'}</td><td>${last?fmtDate(last):'–'}</td><td>${pill}</td></tr>`}).join('');
 }
-function hardWords(){
-  const m={};sessions.forEach(s=>(s.mistakes||[]).forEach(w=>m[w]=(m[w]||0)+1));
+function hardWords(list){const m={};list.forEach(s=>(s.mistakes||[]).forEach(w=>m[w]=(m[w]||0)+1));return Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,12)}
+function report(list){
+  const c=list.reduce((a,s)=>a+s.correct,0),t=list.reduce((a,s)=>a+s.total,0);
   const all={};UNITS.forEach(u=>u.items.forEach(it=>all[it[0]]=it[1]));
-  return Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,12);
-}
-function report(){
-  const c=sessions.reduce((a,s)=>a+s.correct,0),t=sessions.reduce((a,s)=>a+s.total,0);
-  const all={};UNITS.forEach(u=>u.items.forEach(it=>all[it[0]]=it[1]));
-  let r=`Informe de guaraní · ${settings.name||''} · ${new Date().toLocaleDateString('es-PY')}\n`;
-  r+=`Días seguidos: ${streak()} · XP total: ${totalXp()} · Lecciones: ${sessions.length} · Precisión: ${t?Math.round(c/t*100):0}%\n\nPor nivel:\n`;
-  UNITS.forEach(u=>{const ss=sessions.filter(s=>s.unit===u.id);if(!ss.length)return;const cc=ss.reduce((a,s)=>a+s.correct,0),tt=ss.reduce((a,s)=>a+s.total,0);r+=`- ${u.es}: ${ss.length} lecciones, ${Math.round(cc/tt*100)}% de aciertos\n`});
-  const hw=hardWords();if(hw.length)r+=`\nPalabras para repasar: ${hw.map(([w,n])=>`${w} (${all[w]||''})`).join(', ')}\n`;
+  let r=`Informe de guaraní · ${famFilter==='all'?'Todos':pName(famFilter)} · ${new Date().toLocaleDateString('es-PY')}\n`;
+  r+=`Días seguidos: ${streak(list)} · XP total: ${totalXp(list)} · Lecciones: ${list.length} · Aciertos: ${t?Math.round(c/t*100):0}%\n\nPor nivel:\n`;
+  UNITS.forEach(u=>{const ss=list.filter(s=>s.unit===u.id);if(!ss.length)return;const cc=ss.reduce((a,s)=>a+s.correct,0),tt=ss.reduce((a,s)=>a+s.total,0);r+=`- ${u.es}: ${ss.length} lecciones, ${Math.round(cc/tt*100)}% de aciertos\n`});
+  const hw=hardWords(list);if(hw.length)r+=`\nPalabras para repasar: ${hw.map(([w])=>`${w} (${all[w]||''})`).join(', ')}\n`;
   return r;
 }
 function renderFamily(){
-  const c=sessions.reduce((a,s)=>a+s.correct,0),t=sessions.reduce((a,s)=>a+s.total,0);
-  const mins=Math.round(sessions.reduce((a,s)=>a+(s.seconds||0),0)/60);
+  const list=famList();
+  const c=list.reduce((a,s)=>a+s.correct,0),t=list.reduce((a,s)=>a+s.total,0);
+  const mins=Math.round(list.reduce((a,s)=>a+(s.seconds||0),0)/60);
   const all={};UNITS.forEach(u=>u.items.forEach(it=>all[it[0]]=it[1]));
-  const hw=hardWords();
-  const hist=sessions.slice().reverse().slice(0,20);
+  const hw=hardWords(list);
+  const hist=list.slice().reverse().slice(0,20);
   const uname=id=>{const u=UNITS.find(x=>x.id===id);return u?u.es:id};
-  $('#layer').innerHTML=`<div class="screen" role="dialog" aria-label="Resultados">
-    <div class="lhead fam-head pad"><button class="close" type="button" id="lx" aria-label="Cerrar">${UI.x()}</button><h2 style="font-size:1.3rem">Resultados de ${esc(settings.name||'')}</h2></div>
+  const lg=logins.filter(x=>famFilter==='all'||x.p===famFilter).slice().reverse().slice(0,15);
+  const failsToday=logins.filter(x=>!x.ok&&dayKey(x.ts)===today()&&(famFilter==='all'||x.p===famFilter)).length;
+  const multi=players().length>1;
+  setLayer(`<div class="screen" role="dialog" aria-label="Resultados">
+    <div class="lhead fam-head pad"><button class="close" type="button" id="lx" aria-label="Cerrar">${UI.x()}</button><h2 style="font-size:1.3rem">Resultados</h2></div>
     <div class="lbody pad"><div class="fam">
+      ${multi?`<div class="chips" id="chips"><button type="button" class="chip${famFilter==='all'?' on':''}" data-f="all">Todos</button>${players().map(p=>`<button type="button" class="chip${famFilter===p.id?' on':''}" data-f="${p.id}">${ava(p.avatar,'cava')}${esc(p.name)}</button>`).join('')}</div>`:''}
       <div class="tiles">
-        <div class="tl"><small>Días seguidos</small><b>${streak()}</b></div>
-        <div class="tl"><small>XP total</small><b>${totalXp()}</b></div>
-        <div class="tl"><small>Lecciones</small><b>${sessions.length}</b></div>
+        <div class="tl"><small>Días seguidos</small><b>${streak(list)}</b></div>
+        <div class="tl"><small>XP total</small><b>${totalXp(list)}</b></div>
+        <div class="tl"><small>Lecciones</small><b>${list.length}</b></div>
         <div class="tl"><small>Aciertos</small><b>${t?Math.round(c/t*100)+'%':'–'}</b></div>
         <div class="tl"><small>Tiempo total</small><b>${mins} min</b></div>
       </div>
-      ${sessions.length?'':`<div class="panel"><h3>Todavía no hay lecciones</h3><p class="muted">Cuando ${esc(settings.name||'el niño')} termine su primera lección, acá vas a ver los puntos, los aciertos por nivel y las palabras que le cuestan.</p></div>`}
-      <div class="panel chart"><h3>XP por día · últimas 2 semanas</h3>${chart14()}</div>
-      <div class="panel"><h3>Avance por nivel</h3><div class="tw"><table><thead><tr><th>Nivel</th><th>Tema</th><th>Lecciones</th><th>Aciertos</th><th>Última vez</th><th>Estado</th></tr></thead><tbody>${unitRows()}</tbody></table></div></div>
+      ${failsToday>=3?`<div class="panel alert"><b>Atención:</b> hoy hubo ${failsToday} intentos de entrar con dibujos equivocados. Revisá la lista de ingresos.</div>`:''}
+      ${list.length?'':`<div class="panel"><h3>Todavía no hay lecciones</h3><p class="muted">Cuando termine su primera lección, acá vas a ver los puntos, los aciertos por nivel y las palabras que le cuestan.</p></div>`}
+      <div class="panel chart"><h3>XP por día · últimas 2 semanas</h3>${chart14(list)}</div>
+      <div class="panel"><h3>Avance por nivel</h3><div class="tw"><table><thead><tr><th>Nivel</th><th>Tema</th><th>Lecciones</th><th>Aciertos</th><th>Última vez</th><th>Estado</th></tr></thead><tbody>${unitRows(list)}</tbody></table></div></div>
       <div class="panel"><h3>Palabras para repasar juntos</h3>${hw.length?`<div class="words">${hw.map(([w,n])=>`<span class="wchip"><span class="gn">${esc(w)}</span> · ${esc(all[w]||'')} <small>(${n} ${n===1?'error':'errores'})</small></span>`).join('')}</div>`:'<p class="muted">Sin errores registrados todavía.</p>'}</div>
-      <div class="panel"><h3>Últimas lecciones</h3>${hist.length?`<div class="tw"><table><thead><tr><th>Fecha</th><th>Nivel</th><th>Aciertos</th><th>XP</th><th>Tiempo</th></tr></thead><tbody>${hist.map(s=>`<tr><td>${fmtDate(s.ts)}</td><td>${esc(uname(s.unit))}</td><td class="n">${s.correct}/${s.total}</td><td class="n">+${s.xp}</td><td class="n">${Math.floor(s.seconds/60)}:${String(s.seconds%60).padStart(2,'0')}</td></tr>`).join('')}</tbody></table></div>`:'<p class="muted">Sin lecciones todavía.</p>'}</div>
+      <div class="panel"><h3>Últimas lecciones</h3>${hist.length?`<div class="tw"><table><thead><tr><th>Fecha</th>${multi?'<th>Jugador</th>':''}<th>Nivel</th><th>Aciertos</th><th>XP</th><th>Tiempo</th></tr></thead><tbody>${hist.map(s=>`<tr><td>${fmtDate(s.ts)}</td>${multi?`<td>${esc(pName(ownerOf(s)))}</td>`:''}<td>${esc(uname(s.unit))}</td><td class="n">${s.correct}/${s.total}</td><td class="n">+${s.xp}</td><td class="n">${Math.floor(s.seconds/60)}:${String(s.seconds%60).padStart(2,'0')}</td></tr>`).join('')}</tbody></table></div>`:'<p class="muted">Sin lecciones todavía.</p>'}</div>
+      <div class="panel"><h3>Ingresos</h3><p class="muted" style="margin-bottom:8px">Cada vez que alguien toca los dibujos para entrar.</p>${lg.length?`<div class="tw"><table><thead><tr><th>Fecha</th><th>Perfil</th><th>Resultado</th></tr></thead><tbody>${lg.map(x=>`<tr><td>${fmtDate(x.ts)}</td><td>${esc(pName(x.p))}</td><td>${x.ok?'<span class="pill dom">Entró</span>':'<span class="pill low">Dibujos equivocados</span>'}</td></tr>`).join('')}</tbody></table></div>`:'<p class="muted">Sin ingresos todavía.</p>'}</div>
+      <div class="panel"><h3>Jugadores</h3>
+        <div class="plrows">${players().map(p=>`<div class="plrow">${ava(p.avatar,'cava2')}<b style="min-width:0">${esc(p.name)}</b><span class="muted">${sessions.filter(s=>ownerOf(s)===p.id).length} lecciones</span>
+          <span class="row" style="margin-left:auto"><button class="smallbtn" type="button" data-edit="${p.id}">Cambiar nombre o dibujos</button>${players().length>1?`<button class="smallbtn danger" type="button" data-del="${p.id}">Quitar</button>`:''}</span></div>`).join('')}</div>
+        <div class="row" style="margin-top:12px"><button class="smallbtn" type="button" id="addP">Agregar jugador</button><button class="smallbtn" type="button" id="pinB">Cambiar PIN</button></div>
+        <form id="pinF" class="row" hidden style="margin-top:10px"><label class="field"><span>PIN nuevo</span><input id="np1" inputmode="numeric" maxlength="4" type="password" autocomplete="off"></label><label class="field"><span>Repetir</span><input id="np2" inputmode="numeric" maxlength="4" type="password" autocomplete="off"></label><button class="smallbtn" type="submit">Guardar PIN</button></form>
+        <p id="delAsk" hidden style="margin-top:10px"></p>
+      </div>
       <div class="panel"><h3>Ajustes</h3>
-        <div class="row" style="justify-content:space-between">
-          <form class="field" id="nameF"><label for="nameIn"><b>Nombre</b></label><input id="nameIn" value="${esc(settings.name||'')}" maxlength="30"><button class="smallbtn" type="submit">Guardar</button></form>
+        <div class="row">
           <button class="smallbtn" type="button" id="sndB">${UI.sound(soundOn).replace('<svg','<svg style="width:18px;height:18px;vertical-align:-3px"')} Sonido: ${soundOn?'sí':'no'}</button>
-        </div>
-        <div class="row" style="margin-top:12px">
           <button class="smallbtn" type="button" id="copyB">Copiar informe</button>
-          <button class="smallbtn danger" type="button" id="resetB">Borrar todo el progreso</button>
-          <span id="resetAsk" hidden><b>¿Seguro? Se borra todo.</b> <button class="smallbtn danger" type="button" id="resetYes">Sí, borrar</button> <button class="smallbtn" type="button" id="resetNo">Cancelar</button></span>
+          <button class="smallbtn danger" type="button" id="resetB">Borrar el progreso${famFilter==='all'?' de todos':' de '+esc(pName(famFilter))}</button>
+          <span id="resetAsk" hidden><b>¿Seguro? No se puede deshacer.</b> <button class="smallbtn danger" type="button" id="resetYes">Sí, borrar</button> <button class="smallbtn" type="button" id="resetNo">Cancelar</button></span>
         </div>
         <p class="muted" style="margin-top:12px;font-size:.9rem">${storeMode==='account'?'Los resultados se guardan en tu cuenta de Claude: los ves desde cualquier dispositivo donde abras esta página.':'Los resultados se guardan solo en este dispositivo y navegador. Para verlos, abrí este panel en el mismo dispositivo donde juega.'}</p>
         <textarea id="repT" hidden readonly style="width:100%;height:160px;margin-top:10px;font:inherit;font-size:.85rem"></textarea>
       </div>
-    </div></div></div>`;
-  $('#lx').onclick=closeLayer;
-  $('#nameF').onsubmit=async ev=>{ev.preventDefault();settings.name=$('#nameIn').value.trim().slice(0,30);await saveSettings();renderTop();toast('Nombre guardado')};
+    </div></div></div>`,'fam');
+  $('#lx').onclick=()=>{if(current)closeLayer();else{screen=null;$('#layer').innerHTML='';renderAll()}};
+  const ch=$('#chips');if(ch)ch.onclick=e=>{const b=e.target.closest('.chip');if(b){famFilter=b.dataset.f;renderFamily()}};
   $('#sndB').onclick=()=>{soundOn=!soundOn;LS.set('gn-sound',soundOn);renderFamily()};
-  $('#copyB').onclick=()=>{const r=report();
+  $('#copyB').onclick=()=>{const r=report(list);
     const fallback=()=>{const ta=$('#repT');ta.hidden=false;ta.value=r;ta.select();toast('Seleccioná y copiá el texto')};
     try{navigator.clipboard.writeText(r).then(()=>toast('Informe copiado'),fallback)}catch(e){fallback()}};
   $('#resetB').onclick=()=>{$('#resetAsk').hidden=false};
   $('#resetNo').onclick=()=>{$('#resetAsk').hidden=true};
-  $('#resetYes').onclick=async()=>{await resetAll();toast('Progreso borrado');renderFamily();renderTop()};
+  $('#resetYes').onclick=async()=>{await resetProgress(famFilter);toast('Progreso borrado');renderFamily();renderTop()};
+  $('#pinB').onclick=()=>{$('#pinF').hidden=false;$('#np1').focus()};
+  $('#pinF').onsubmit=async ev=>{ev.preventDefault();const a=$('#np1').value,b=$('#np2').value;
+    if(!/^\d{4}$/.test(a)){toast('El PIN tiene que tener 4 números');return}if(a!==b){toast('Los dos PIN no son iguales');return}
+    settings=Object.assign({},settings,{pinHash:hash('pin:'+a)});if(await saveSettings()){toast('PIN cambiado');renderFamily()}};
+  $('#addP').onclick=()=>playerForm({title:'Agregar jugador',back:()=>renderFamily(),
+    onSave:async p=>{settings=Object.assign({},settings,{players:players().concat([p])});if(await saveSettings()){toast(p.name+' ya puede entrar');renderFamily()}}});
+  $('#layer').querySelector('.plrows').onclick=e=>{
+    const ed=e.target.closest('[data-edit]'),dl=e.target.closest('[data-del]');
+    if(ed){const p=players().find(x=>x.id===ed.dataset.edit);playerForm({title:'Cambiar '+p.name,player:p,back:()=>renderFamily(),
+      onSave:async np=>{settings=Object.assign({},settings,{players:players().map(x=>x.id===np.id?np:x)});if(current&&current.id===np.id)current=np;if(await saveSettings()){toast('Guardado');renderFamily()}}})}
+    if(dl){const p=players().find(x=>x.id===dl.dataset.del);const box=$('#delAsk');box.hidden=false;
+      box.innerHTML=`<b>¿Quitar a ${esc(p.name)}?</b> Sus lecciones quedan en el historial. <button class="smallbtn danger" type="button" id="delYes">Sí, quitar</button> <button class="smallbtn" type="button" id="delNo">Cancelar</button>`;
+      $('#delNo').onclick=()=>{box.hidden=true};
+      $('#delYes').onclick=async()=>{settings=Object.assign({},settings,{players:players().filter(x=>x.id!==p.id)});if(current&&current.id===p.id)current=null;if(famFilter===p.id)famFilter='all';if(await saveSettings())renderFamily()}}
+  };
 }
 
 /* ---------- Arranque ---------- */
-renderTop();renderHome();
+renderAll();
 connectDb();
 })();
 </script>

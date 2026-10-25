@@ -1,7 +1,24 @@
 # Jaguarete'i · Aprendé guaraní
 
 App para que un niño de 2.º grado aprenda guaraní con lecciones cortas (estilo Duolingo):
-11 niveles, dibujos, traducción al castellano, puntos XP, racha diaria y coronas.
+17 niveles y un nivel extra, 4 repasos de bloque, repaso de palabras difíciles, 4 juegos,
+dibujos, traducción al castellano, puntos XP, racha diaria y coronas.
+
+## Contenido
+- **Bloque 1 · Primeros pasos:** saludos, números, colores, familia → Repaso 1
+- **Bloque 2 · Mi mundo:** animales, cuerpo, opuestos, cómo me siento → Repaso 2
+- **Bloque 3 · Mi casa y mi escuela:** naturaleza, comidas, mi casa, la escuela → Repaso 3
+- **Bloque 4 · Hablo en guaraní:** lo que hago, más acciones, los días, frases, el cuento → Repaso 4
+- **Extra · Mi clase:** las palabras del cuaderno de la escuela
+
+Cada nivel se puede repetir hasta 3 coronas; con cada corona hay más ejercicios de escribir.
+La tarjeta **Repaso para vos** arma una lección con las palabras que más le cuestan a cada estudiante.
+
+## Juegos
+- **Memoria del ñandutí:** dar vuelta tarjetas y unir dibujo con palabra.
+- **Lluvia de palabras:** tocar la gota con la palabra correcta antes de que llegue al suelo.
+- **Letra por letra:** armar cada palabra con las letras del guaraní (ch, mb, nd, ', ã…).
+- **¡Pya'e!:** responder rápido Hẽe o Nahániri: ¿el dibujo es esa palabra?
 
 Sitio: https://cinarza.github.io/aprendo-guarani/
 
@@ -20,6 +37,8 @@ Configuración (una sola vez, desde una computadora):
 La planilla crea sola sus hojas: **Estudiantes**, **Lecciones**, **Ingresos** y **Ajustes**.
 El PIN y las claves de los estudiantes se guardan cifrados.
 
+**Actualizar el servidor** (por ejemplo, a la versión 2, que recuerda las palabras aprendidas y permite cerrar los registros):
+pegá el `servidor-google.gs` nuevo en Apps Script, Guardar, y después
 Si más adelante cambiás el código del servidor: **Implementar → Gestionar implementaciones → editar → Versión nueva**, así la URL sigue siendo la misma.
 
 ## Inicio de sesión

@@ -13,10 +13,10 @@
  * El PIN del adulto y las claves de los estudiantes se guardan cifrados (no se pueden leer).
  */
 
-var VERSION = 1;
+var VERSION = 2;
 var HEAD = {
   Estudiantes: ['id', 'Nombre', 'Animal', 'Clave (cifrada)', 'Registrado'],
-  Lecciones: ['Fecha', 'Estudiante', 'Nivel', 'Correctas', 'Total', '% aciertos', 'XP', 'Tiempo (seg)', 'Palabras para repasar', 'id_estudiante', 'id_nivel', 'dia', 'id_leccion'],
+  Lecciones: ['Fecha', 'Estudiante', 'Nivel', 'Correctas', 'Total', '% aciertos', 'XP', 'Tiempo (seg)', 'Palabras para repasar', 'id_estudiante', 'id_nivel', 'dia', 'id_leccion', 'Palabras bien'],
   Ingresos: ['Fecha', 'Estudiante', 'Resultado', 'id_estudiante'],
   Ajustes: ['Clave', 'Valor']
 };
@@ -53,7 +53,7 @@ function doPost(e) {
 /* ---------- Acciones ---------- */
 var ACTIONS = {
   status: function () {
-    return { ok: true, hasPin: !!prop('pin'), version: VERSION };
+    return { ok: true, hasPin: !!prop('pin'), version: VERSION, allowReg: getSetting('allowReg') !== 'no' };
   },
 
   setup: function (r) {
@@ -63,7 +63,8 @@ var ACTIONS = {
     return { ok: true };
   },
 
-  register: function (r) {
+  register: function (r, byAdmin) {
+    if (!byAdmin && getSetting('allowReg') === 'no') return { ok: false, error: 'reg_closed' };
     var name = cleanName(r.name);
     if (!name) return { ok: false, error: 'bad_name' };
     if (!validSeq(r.seq)) return { ok: false, error: 'bad_seq' };
@@ -120,7 +121,8 @@ var ACTIONS = {
     sh.appendRow([
       new Date(num(s.ts) || Date.now()), safe(p ? p.name : (s.player || '')), safe(String(s.unitName || '')),
       correct, total, Math.round(correct / total * 100), num(s.xp), num(s.seconds),
-      safe((s.mistakes || []).map(String).join(', ')), pid, "'" + String(s.unit), "'" + String(s.day || ''), "'" + String(s.id)
+      safe((s.mistakes || []).map(String).join(', ')), pid, "'" + String(s.unit), "'" + String(s.day || ''), "'" + String(s.id),
+      safe((s.ok || []).map(String).join(', '))
     ]);
     return { ok: true };
   },
@@ -147,7 +149,9 @@ var ACTIONS = {
       sessions: lessons(),
       logins: ingresos(),
       waNumber: getSetting('waNumber'),
-      kidShare: getSetting('kidShare') !== 'no'
+      kidShare: getSetting('kidShare') !== 'no',
+      allowReg: getSetting('allowReg') !== 'no',
+      version: VERSION
     };
   },
 
@@ -155,6 +159,7 @@ var ACTIONS = {
     if (!isAdmin(r.adminToken)) return { ok: false, error: 'auth' };
     if (r.waNumber !== undefined) setSetting('waNumber', String(r.waNumber).replace(/\D/g, '').slice(0, 15));
     if (r.kidShare !== undefined) setSetting('kidShare', r.kidShare ? 'si' : 'no');
+    if (r.allowReg !== undefined) setSetting('allowReg', r.allowReg ? 'si' : 'no');
     return { ok: true };
   },
 
@@ -167,7 +172,7 @@ var ACTIONS = {
 
   adminAddPlayer: function (r) {
     if (!isAdmin(r.adminToken)) return { ok: false, error: 'auth' };
-    var res = ACTIONS.register(r);
+    var res = ACTIONS.register(r, true);
     if (res.ok) { delete res.token; }
     return res;
   },
@@ -228,7 +233,8 @@ function lessons() {
     return {
       id: String(x[12]), ts: ts, day: String(x[11]), unit: String(x[10]), unitName: String(x[2]),
       correct: Number(x[3]) || 0, total: Number(x[4]) || 1, xp: Number(x[6]) || 0, seconds: Number(x[7]) || 0,
-      mistakes: String(x[8] || '') ? String(x[8]).split(', ') : [], playerId: String(x[9]), player: String(x[1])
+      mistakes: String(x[8] || '') ? String(x[8]).split(', ') : [], ok: String(x[13] || '') ? String(x[13]).split(', ') : [],
+      playerId: String(x[9]), player: String(x[1])
     };
   }).sort(function (a, b) { return a.ts - b.ts; });
 }
@@ -261,6 +267,16 @@ function sheet(name) {
   var sh = ss.getSheetByName(name);
   if (sh && sh.getLastRow() > 0) {
     var first = sh.getRange(1, 1, 1, HEAD[name].length).getValues()[0];
+    // Actualización: si faltan columnas nuevas al final, se agregan sin perder nada
+    var fits = String(first[0]) === HEAD[name][0], missing = false;
+    for (var c = 0; c < HEAD[name].length; c++) {
+      if (String(first[c]) === '') missing = true;
+      else if (missing || String(first[c]) !== HEAD[name][c]) { fits = false; break; }
+    }
+    if (fits && missing) {
+      sh.getRange(1, 1, 1, HEAD[name].length).setValues([HEAD[name]]);
+      first = HEAD[name];
+    }
     if (String(first[0]) !== HEAD[name][0] || String(first[HEAD[name].length - 1]) !== HEAD[name][HEAD[name].length - 1]) {
       sh.setName(name + ' (anterior ' + Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm') + ')');
       sh = null;
